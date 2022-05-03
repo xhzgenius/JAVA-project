@@ -47,26 +47,27 @@ public class Store extends FellowPool
     private ArrayList<Player>Accounts;
                                 // share模式下的多玩家管理
     /****   必要的条件    ****/
-    private static ArrayList<Integer> upgradeCost;
+    private ArrayList<Integer> upgradeCost;
                                 // 升级开销
-    private static ArrayList<Integer> fellowGradeNum;
+    private ArrayList<Integer> fellowGradeNum;
                                 // 等级化随从数量
     public int turnID;          // 游戏回合
-    private final int maxFellowN=5;     
+    private int maxFellowN=5;     
                                 // 展示最大数量
 
     /*****  share mode *******/
-    static class Player{
-        int playerID;           // 玩家id
-        String playName;        // 玩家姓名
-        int playerCoin;         // 玩家金币
-        ArrayList<Fellow> frozenFellow;
+    class Player{
+        private int playerID;           // 玩家id
+        private String playName;        // 玩家姓名
+        private int playerCoin;         // 玩家金币
+        private ArrayList<Fellow> frozenFellow;
                                 // 冻结的随从
-        ArrayList<Fellow> showFellow;
+        private ArrayList<Fellow> showFellow;
                                 // 展示的随从
-        int playerLevel;        // 玩家等级
-        int upgradeFee;         // 升级开销
-        boolean upgraded;       // 是否升级
+        private int playerLevel;        // 玩家等级
+        private int upgradeFee;         // 升级开销
+        private boolean upgraded;       // 是否升级
+        private int maxFellowN;         // 最大随从数
         /**
          * @brief Player 初始化
          * @param Id    玩家ID
@@ -79,20 +80,96 @@ public class Store extends FellowPool
             this.playName=Name;
             this.playerCoin=coin;
             this.playerLevel=level;
-            this.upgradeFee=Store.upgradeCost.get(level);
+            this.upgradeFee=upgradeCost.get(level);
             this.upgraded = false;
         }
 
         public void start(int turnID){
-            this.playerCoin = 3+turnID<=10?3+turnID:10;
+            this.playerCoin = Math.min(3+turnID,10);
+            if(this.upgraded){
+                this.maxFellowN=fellowGradeNum.get(this.playerLevel);
+                this.upgradeFee=upgradeCost.get(this.playerLevel);
+                this.upgraded=false;
+            }
+            else{
+                this.upgradeFee-=1;
+            } 
         }
 
+        /**
+         * 
+         * @param fli initial Fellow List
+         * @param mode whether repeatable generate Fellow list 
+         */
+        public ArrayList<Fellow> refresh(int mode){
+            if(this.playerCoin==0)return this.showFellow;
+            this.playerCoin-=1;
+            if(!this.showFellow.isEmpty())this.showFellow.clear();
+            return this.getSelectableFellowList(mode);
+        }
+        
+        /**
+         * @brief upgrade 升级酒馆
+         */
         public void upgrade(){
-            this.playerCoin-=this.upgradeFee;
-            this.playerLevel+=1;
-            this.upgradeFee=Store.upgradeCost.get(this.playerLevel);
+            this.playerCoin -= this.upgradeFee;
+            this.upgraded=true;
+            this.playerLevel++;
         }
 
+        /**
+         * 
+         * @param saleFellow 待售Fellow
+         */
+        public void sale(ArrayList<Fellow>saleFellow){
+            this.playerCoin+=saleFellow.size();
+            saleFellow.clear();
+        }
+
+        /**
+         * 
+         * @param f selected  
+         */
+        public void enroll(Fellow f){
+            if(this.showFellow.contains(f)&&this.playerCoin>=3){
+                this.playerCoin-=3;
+                this.showFellow.remove(f);
+            }
+            return;
+        }
+
+        public ArrayList<Fellow> getSelectableFellowList(int mode){
+            // 判定是否冻结，冻结加入新展示队列
+            if(!this.frozenFellow.isEmpty()){
+                for(Fellow f:this.frozenFellow)
+                this.showFellow.add(f);
+                this.frozenFellow.clear();
+            }
+            ArrayList<Integer> okList;
+            for(int i=0;i<fellowList.size();++i){
+                if(fellowList.get(i).level<=this.playerLevel)okList.add(i);
+            }
+            Random rdm = new Random();
+            int size =okList.size();
+            int maxSize = this.maxFellowN - this.showFellow.size();
+            // 可能重复的卡组
+            if(mode==0){
+                for(int i=0;i<maxSize;++i){
+                int idx = rdm.nextInt(size);
+                this.showFellow.add(fellowList.get(okList.get(idx)));
+                }
+            }
+            else{
+                for(int i=0;i<maxSize;++i){
+                    int idx = rdm.nextInt(size);
+                    while(okList.contains(idx)){
+                        idx = rdm.nextInt(size);
+                    }
+                    this.showFellow.add(fellowList.get(okList.get(idx)));
+                }
+            }
+            return this.showFellow;
+        }
         public void add(){
             this.playerCoin+=1;
         }
@@ -114,29 +191,21 @@ public class Store extends FellowPool
 
         // 默认fellow基类实现了深拷贝
         /**
-         * @brief frozen 更新冻结列表
+         * @brief freeze 更新冻结列表
          * @param frozen 冻结列表
          */
-        public void frozen(ArrayList<Fellow> frozen){
-            for(Fellow f:frozen){
-                this.frozenFellow.add(f.clone());
+        public void freeze(ArrayList<Fellow> selected){
+            if(this.frozenFellow.size()+selected.size()<=this.maxFellowN){
+                for(Fellow f : selected){
+                    this.frozenFellow.add(f);
+                }
+                selected.clear();
             }
             return;
         }
 
         public ArrayList<Fellow> getFrozen(){
             return this.frozenFellow;
-        }
-
-        public boolean isFrozen(){
-            return this.frozenFellow.isEmpty();
-        }
-
-        public end(){
-            this.playerCoin=0;
-            this.frozenFellow.clear();
-            if(!this.upgraded)this.upgradeFee=Math.max(this.upgradeFee-1,0);
-            else this.upgraded=true;
         }
 
     }
@@ -149,13 +218,14 @@ public class Store extends FellowPool
      */
     public Store(ArrayList<PlayerMsg>players, int maxSize,ArrayList<Integer>cost,ArrayList<Integer>gradeNum){
         super();
+        fellowGradeNum= (ArrayList<Integer>)gradeNum.clone();
+        upgradeCost=(ArrayList<Integer>)cost.clone();
         for(PlayerMsg player:players){
             this.Accounts.add(new Player(player.Id, player.name, player.coin, player.level));
         }
         this.maxFellowN = maxSize;
         this.mode = "share";
-        Store.fellowGradeNum= gradeNum.clone();
-        Store.upgradeCost=cost.clone();
+        
     }
 
     /**
@@ -174,20 +244,20 @@ public class Store extends FellowPool
         this.splayerLevel=level;
         this.maxFellowN = maxSize;
         this.mode = "single";
-        Store.upgradeCost=cost.clone();
-        Store.fellowGradeNum = gradeNum.clone();
+        this.upgradeCost=(ArrayList<Integer>)cost.clone();
+        this.fellowGradeNum = (ArrayList<Integer>)gradeNum.clone();
     }
     /*******   功能函数  *******/
-    
+    /****** Single Mode ******/ 
     /**
      * @brief start 每次访问商店需要首先访问
      * @param turnID 回合数
      */
     public void start(int turnID){
-        this.splayerCoin=Math.min(3+Store.upgradeCost.get(this.splayerLevel),10);
+        this.splayerCoin=Math.min(3+turnID,10);
         if(this.sUpgraded){
-            this.maxFellowN=Store.fellowGradeNum.get(this.splayerLevel);
-            this.sUpgradeFee=Store.upgradeCost.get(this.splayerLevel);
+            this.maxFellowN=this.fellowGradeNum.get(this.splayerLevel);
+            this.sUpgradeFee=this.upgradeCost.get(this.splayerLevel);
             this.sUpgraded=false;
         }
         else{
@@ -234,7 +304,7 @@ public class Store extends FellowPool
      * 
      * @param saleFellow 待售Fellow
      */
-    public void sale(ArrayList<Fello>saleFellow){
+    public void sale(ArrayList<Fellow>saleFellow){
         this.splayerCoin+=saleFellow.size();
         saleFellow.clear();
     }
@@ -287,5 +357,37 @@ public class Store extends FellowPool
             }
         }
         return this.showFellow;
+    }
+    /****** Share Mode ******/ 
+    public ArrayList<Fellow> update(PlayerMsg post,int mode){
+        if (post.operation=="refresh"){
+            return this.Accounts.get(post.Id).refresh(mode);
+        }
+        else if (post.operation=="getSelectableFellowList"){
+            return this.Accounts.get(post.Id).getSelectableFellowList(mode);
+        }
+    }
+    public void update(PlayerMsg post, ArrayList<Fellow> Fli){
+        if(post.operation=="freeze"){
+            this.Accounts.get(post.Id).freeze(Fli);
+        }
+        else if (post.operation=="sale"){
+            this.Accounts.get(post.Id).sale(Fli);
+        }
+    }
+    public void update(PlayerMsg post, Fellow fl){
+        if(post.operation=="enroll"){
+            this.Accounts.get(post.Id).enroll(fl);
+        }
+    }
+    public void update(PlayerMsg post){
+        if(post.operation=="upgrade"){
+            this.Accounts.get(post.Id).upgrade();
+        }
+    }
+    public void update(PlayerMsg post,int turnID){
+        if(post.operation=="start"){
+            this.Accounts.get(post.Id).start(turnID);
+        }
     }
 }
