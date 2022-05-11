@@ -1,8 +1,30 @@
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.*;
+
+/**
+ * 商店刷新模式：可重复随从/不可重复随从
+ */
+enum StoreRefreshMode
+{
+    duplicate, noDuplicate;
+}
+/**
+ * 商店共享模式：不共享/共享
+ */
+enum StoreShareMode
+{
+    single, share;
+}
 //  继承自随从池(default: )    
 /**
+ * 玩家可以进行的操作：
+ * @method freeze()
+ * @method enroll()
+ * @method sell()
+ * @method refresh()
+ * @method upgrade()
+ * @brief
  * 回合费用
 初始回合玩家获得3个铸币，每回合结束时清空铸币，下一回合重新获得上一回合数+1的铸币，最多获得十个。 [2] 
 招揽随从
@@ -34,7 +56,7 @@ public class Store extends FellowPool
     
     /****   personal mode  ****/
     private final int splayerID;       // 玩家id
-    private final String splayName;    // 玩家姓名（可不用）
+    private final String splayerName;    // 玩家姓名（可不用）
     private int splayerCoin;     // 玩家金币
     private int splayerLevel;
     private ArrayList<Fellow> sFrozenFellow;
@@ -43,17 +65,27 @@ public class Store extends FellowPool
                                 // 冻结随从
     private boolean sUpgraded;  // 是否升级
     private int sUpgradeFee;    // 升级开销
-    private String mode;        // 商店使用模式 share 多人共用 single 单人单用
+    private StoreShareMode shareMode;        // 商店使用模式 share 多人共用 single 单人单用
+    private StoreRefreshMode refreshMode = StoreRefreshMode.duplicate;
     private ArrayList<Player>Accounts;
                                 // share模式下的多玩家管理
     /****   必要的条件    ****/
     private ArrayList<Integer> upgradeCost;
-                                // 升级开销
+                                // 每一级的升级开销
     private ArrayList<Integer> fellowGradeNum;
                                 // 等级化随从数量
     public int turnID;          // 游戏回合
-    private int maxFellowN=5;     
+    private int maxFellowN;     
                                 // 展示最大数量
+
+    // getters --让Game和bot可以访问的函数，由XHZ添加
+    public int getID(){return splayerID;}
+    public String getName(){return splayerName;}
+    public int getCoin(){return splayerCoin;}
+    public int getLevel(){return splayerLevel;}
+    public ArrayList<Fellow> getShowFellows(){return (ArrayList<Fellow>)showFellow.clone();}
+    public ArrayList<Fellow> getFrozenFellows(){return (ArrayList<Fellow>)sFrozenFellow.clone();}
+    public int getUpgradeFee(){return sUpgradeFee;}
 
     /*****  share mode *******/
     class Player{
@@ -101,7 +133,7 @@ public class Store extends FellowPool
          * @param fli initial Fellow List
          * @param mode whether repeatable generate Fellow list 
          */
-        public ArrayList<Fellow> refresh(int mode){
+        public ArrayList<Fellow> refresh(StoreRefreshMode mode){
             if(this.playerCoin==0)return this.showFellow;
             this.playerCoin-=1;
             if(!this.showFellow.isEmpty())this.showFellow.clear();
@@ -121,7 +153,7 @@ public class Store extends FellowPool
          * 
          * @param saleFellow 待售Fellow
          */
-        public void sale(ArrayList<Fellow>saleFellow){
+        public void sell(ArrayList<Fellow>saleFellow){
             this.playerCoin+=saleFellow.size();
             saleFellow.clear();
         }
@@ -138,14 +170,14 @@ public class Store extends FellowPool
             return;
         }
 
-        public ArrayList<Fellow> getSelectableFellowList(int mode){
+        public ArrayList<Fellow> getSelectableFellowList(StoreRefreshMode mode){
             // 判定是否冻结，冻结加入新展示队列
             if(!this.frozenFellow.isEmpty()){
                 for(Fellow f:this.frozenFellow)
                 this.showFellow.add(f);
                 this.frozenFellow.clear();
             }
-            ArrayList<Integer> okList;
+            ArrayList<Integer> okList = new ArrayList<Integer>();
             for(int i=0;i<fellowList.size();++i){
                 if(fellowList.get(i).level<=this.playerLevel)okList.add(i);
             }
@@ -153,7 +185,7 @@ public class Store extends FellowPool
             int size =okList.size();
             int maxSize = this.maxFellowN - this.showFellow.size();
             // 可能重复的卡组
-            if(mode==0){
+            if(mode==StoreRefreshMode.duplicate){
                 for(int i=0;i<maxSize;++i){
                 int idx = rdm.nextInt(size);
                 this.showFellow.add(fellowList.get(okList.get(idx)));
@@ -207,43 +239,50 @@ public class Store extends FellowPool
         public ArrayList<Fellow> getFrozen(){
             return this.frozenFellow;
         }
-
     }
+
     /*******   商店初始化 ******/
-    public Store(){}
+    // public Store()
+    // {
+    //     this.splayerID = -114514;
+    //     this.splayerName = "Uninitialized name";
+    // }
     /**
-     * @brief store 接受参数列表初始化
+     * @brief store Share Mode多人商店模式，接受参数列表初始化
      * @param args -- PlayerMsg 
      *            
      */
     public Store(ArrayList<PlayerMsg>players, int maxSize,ArrayList<Integer>cost,ArrayList<Integer>gradeNum){
         super();
+        this.splayerID = -114514;
+        this.splayerName = "Uninitialized name";
         fellowGradeNum= (ArrayList<Integer>)gradeNum.clone();
         upgradeCost=(ArrayList<Integer>)cost.clone();
         for(PlayerMsg player:players){
             this.Accounts.add(new Player(player.Id, player.name, player.coin, player.level));
         }
         this.maxFellowN = maxSize;
-        this.mode = "share";
+        this.shareMode = StoreShareMode.share;
         
     }
 
     /**
-     * @brief store 给定参数初始化
+     * @brief store Single Mode单人商店模式，给定参数初始化
      * @param Id    玩家ID
      * @param name  玩家姓名（可置空）
-     * @param coin  玩家金币
+     * @param coin  玩家金币（此参数已移除，因为没有用）
      * @param level 玩家等级
      */
-    public Store(int Id, String name, int coin, int level, int maxSize,ArrayList<Integer>cost,ArrayList<Integer>gradeNum){
+    public Store(int Id, String name, int level, ArrayList<Integer>cost, ArrayList<Integer>gradeNum){
         super();
         this.turnID=0;
         this.splayerID=Id;
-        this.splayName=name;
-        this.splayerCoin=coin;
+        this.splayerName=name;
+        // this.splayerCoin=coin;  // 这行不重要，因为start()会重置this.splayerCoin
         this.splayerLevel=level;
-        this.maxFellowN = maxSize;
-        this.mode = "single";
+        // this.maxFellowN = maxSize;  // 这行不重要，因为start()会重置this.maxFellowN
+        // 因此我从构造函数删去了以上两个参数。——XHZ
+        this.shareMode = StoreShareMode.single;
         this.upgradeCost=(ArrayList<Integer>)cost.clone();
         this.fellowGradeNum = (ArrayList<Integer>)gradeNum.clone();
     }
@@ -263,6 +302,7 @@ public class Store extends FellowPool
         else{
             this.sUpgradeFee-=1;
         }
+        this.refresh();
     }
 
     /**
@@ -270,11 +310,11 @@ public class Store extends FellowPool
      * @param fli initial Fellow List
      * @param mode whether repeatable generate Fellow list 
      */
-    public ArrayList<Fellow> refresh(int mode){
+    public ArrayList<Fellow> refresh(){
         if(this.splayerCoin==0)return this.showFellow;
         this.splayerCoin-=1;
         if(!this.showFellow.isEmpty())this.showFellow.clear();
-        return this.getSelectableFellowList(mode);
+        return this.getSelectableFellowList();
     }
 
     /**
@@ -304,9 +344,8 @@ public class Store extends FellowPool
      * 
      * @param saleFellow 待售Fellow
      */
-    public void sale(ArrayList<Fellow>saleFellow){
-        this.splayerCoin+=saleFellow.size();
-        saleFellow.clear();
+    public void sell(Fellow saleFellow){
+        this.splayerCoin+=1;
     }
 
     /**
@@ -326,14 +365,14 @@ public class Store extends FellowPool
      * @param mode 是否随机生成不重复
      * @return 可选择随从列表
      */
-    public ArrayList<Fellow> getSelectableFellowList(int mode){
+    public ArrayList<Fellow> getSelectableFellowList(){
         // 判定是否冻结，冻结加入新展示队列
         if(!this.sFrozenFellow.isEmpty()){
             for(Fellow f:this.sFrozenFellow)
             this.showFellow.add(f);
             this.sFrozenFellow.clear();
         }
-        ArrayList<Integer> okList;
+        ArrayList<Integer> okList = new ArrayList<Integer>();
         for(int i=0;i<this.fellowList.size();++i){
             if(this.fellowList.get(i).level<=this.splayerLevel)okList.add(i);
         }
@@ -341,7 +380,7 @@ public class Store extends FellowPool
         int size =okList.size();
         int maxSize = this.maxFellowN - this.showFellow.size();
         // 可能重复的卡组
-        if(mode==0){
+        if(this.refreshMode==StoreRefreshMode.duplicate){
             for(int i=0;i<maxSize;++i){
             int idx = rdm.nextInt(size);
             this.showFellow.add(this.fellowList.get(okList.get(idx)));
@@ -359,20 +398,22 @@ public class Store extends FellowPool
         return this.showFellow;
     }
     /****** Share Mode ******/ 
-    public ArrayList<Fellow> update(PlayerMsg post,int mode){
+    public ArrayList<Fellow> update(PlayerMsg post,StoreRefreshMode mode){
         if (post.operation=="refresh"){
             return this.Accounts.get(post.Id).refresh(mode);
         }
         else if (post.operation=="getSelectableFellowList"){
             return this.Accounts.get(post.Id).getSelectableFellowList(mode);
         }
+        // Control should never reach here!
+        return new ArrayList<Fellow>();
     }
     public void update(PlayerMsg post, ArrayList<Fellow> Fli){
         if(post.operation=="freeze"){
             this.Accounts.get(post.Id).freeze(Fli);
         }
         else if (post.operation=="sale"){
-            this.Accounts.get(post.Id).sale(Fli);
+            this.Accounts.get(post.Id).sell(Fli);
         }
     }
     public void update(PlayerMsg post, Fellow fl){
