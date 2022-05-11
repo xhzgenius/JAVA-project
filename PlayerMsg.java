@@ -3,19 +3,19 @@
  * Usage: PlayerMsg msg = new PlayerMsg().Builder(ex_id).name(ex_name).level(0).build()
  */
 public class PlayerMsg {
-     public final int Id;
-     public final String name;
-     public final int coin=0;
-     public final String operation="";
-     public final int level=0;
+     public int Id;
+     public String name;
+     public int coin;
+     public String operation;
+     public int level;
 
      /*** 生成器 ***/
      public static class Builder{
           private final int Id;
-          private final String name="";
-          private final int coin=0;
-          private final String operation="";
-          private final int level=0;
+          private String name="";
+          private int coin=0;
+          private String operation="";
+          private int level=0;
 
           public  Builder(int id){
                this.Id=id;
@@ -48,19 +48,19 @@ public class PlayerMsg {
           level = build.level;
      }
      /****   Setter  *****/
-     public setOperation(String val){
+     public void setOperation(String val){
           this.operation = val;
      }
-     public setCoin(int val){
-          this.operation = val;
+     public void setCoin(int val){
+          this.coin = val;
      }
-     public setLevel(int val){
+     public void setLevel(int val){
           this.level = val;
      }
-     public setId(int val){
-          this.level = val;
+     public void setId(int val){
+          this.Id = val;
      }
-     public setName(String val){
+     public void setName(String val){
           this.name = val;
      }
 }
