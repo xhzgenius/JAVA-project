@@ -1,3 +1,4 @@
+package logic;
 /**** 通用消息接口  ****/
 /**
  * Usage: PlayerMsg msg = new PlayerMsg().Builder(ex_id).name(ex_name).level(0).build()
