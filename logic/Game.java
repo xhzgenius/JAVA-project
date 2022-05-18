@@ -28,6 +28,10 @@ public class Game
     public Game(ArrayList<String> namesList)
     {
         maxPlayer = namesList.size();
+        storesList = new ArrayList<>();
+        inventoriesList = new ArrayList<>();
+        battlefieldsList = new ArrayList<>();
+        healthList = new ArrayList<>();
         for(int i = 0;i<maxPlayer;i++)
         {
             storesList.add(
