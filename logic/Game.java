@@ -145,7 +145,7 @@ public class Game
     {
         Store store = storesList.get(playerID);
         if(store.getCoin()<1) throw new GameException(GameException.GameExceptionType.REFRESH_NO_ENOUGH_COIN);
-        store.refresh();
+        store.refresh(true);
     }
 
     /**

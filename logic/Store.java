@@ -267,7 +267,6 @@ public class Store extends FellowPool
         }
         this.maxFellowN = maxSize;
         this.shareMode = StoreShareMode.share;
-        
     }
 
     /**
@@ -300,25 +299,24 @@ public class Store extends FellowPool
      */
     public void start(int turnID){
         this.splayerCoin=Math.min(3+turnID,10);
-        if(this.sUpgraded){
-            this.maxFellowN=this.fellowGradeNum.get(this.splayerLevel);
-            this.sUpgradeFee=this.upgradeCost.get(this.splayerLevel);
+        if(turnID == 0 || this.sUpgraded){
+            this.maxFellowN=this.fellowGradeNum.get(this.splayerLevel - 1);
+            this.sUpgradeFee=this.upgradeCost.get(this.splayerLevel - 1);
             this.sUpgraded=false;
         }
         else{
             this.sUpgradeFee-=1;
         }
-        this.refresh();
+        this.refresh(false);
     }
 
     /**
      * 
-     * @param fli initial Fellow List
-     * @param mode whether repeatable generate Fellow list 
+     * @param isManual 是否是手动刷新，如果是手动刷新则要消耗 1 个铸币
      */
-    public ArrayList<Fellow> refresh(){
+    public ArrayList<Fellow> refresh(boolean isManual){
         if(this.splayerCoin==0)return this.showFellow;
-        this.splayerCoin-=1;
+        if(isManual)this.splayerCoin-=1;
         if(!this.showFellow.isEmpty())this.showFellow.clear();
         return this.getSelectableFellowList();
     }
@@ -386,7 +384,7 @@ public class Store extends FellowPool
         int size =okList.size();
         int maxSize = this.maxFellowN - this.showFellow.size();
         // 可能重复的卡组
-        if(this.refreshMode==StoreRefreshMode.duplicate){
+        /* if(this.refreshMode==StoreRefreshMode.duplicate){
             for(int i=0;i<maxSize;++i){
             int idx = rdm.nextInt(size);
             this.showFellow.add(this.fellowList.get(okList.get(idx)));
@@ -400,7 +398,7 @@ public class Store extends FellowPool
                 }
                 this.showFellow.add(this.fellowList.get(okList.get(idx)));
             }
-        }
+        } */
         return this.showFellow;
     }
     /****** Share Mode ******/ 
