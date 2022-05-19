@@ -115,6 +115,8 @@ public class Store extends FellowPool
             this.playerLevel=level;
             this.upgradeFee=upgradeCost.get(level);
             this.upgraded = false;
+            this.showFellow = new ArrayList<>();
+            this.frozenFellow = new ArrayList<>();
         }
 
         public void start(int turnID){
@@ -257,6 +259,7 @@ public class Store extends FellowPool
         super();
         this.splayerID = -114514;
         this.splayerName = "Uninitialized name";
+        this.showFellow = new ArrayList<>();
         fellowGradeNum= (ArrayList<Integer>)gradeNum.clone();
         upgradeCost=(ArrayList<Integer>)cost.clone();
         for(PlayerMsg player:players){
@@ -284,6 +287,8 @@ public class Store extends FellowPool
         // this.maxFellowN = maxSize;  // 这行不重要，因为start()会重置this.maxFellowN
         // 因此我从构造函数删去了以上两个参数。——XHZ
         this.shareMode = StoreShareMode.single;
+        this.showFellow = new ArrayList<>();
+        this.sFrozenFellow = new ArrayList<>();
         this.upgradeCost=(ArrayList<Integer>)cost.clone();
         this.fellowGradeNum = (ArrayList<Integer>)gradeNum.clone();
     }

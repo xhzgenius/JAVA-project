@@ -46,6 +46,7 @@ public class Game
             battlefieldsList.add(new ArrayList<Fellow>());
             healthList.add(Integer.valueOf(40));
         }
+        storesList.get(0).start(0); // ! 开始回合放在这里是不是不太好？
     }
 
     // ============================================================================================
