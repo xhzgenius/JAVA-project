@@ -5,13 +5,7 @@ enum FellowType {
     General, Beast, Demon, Pirate, Dragon, Mech, Elemental, Murloc
 }
 
-/*
-    class Fellow
-    Attack: int
-    Health: int
-    Type: FellowType
-*/
-class Fellow {
+public class Fellow {
     private int ID;
     public final String Name;
     public final String Description;
@@ -308,4 +302,3 @@ class Menagerie_Mug extends Fellow {
         return Battleground;
     }
 }
-
