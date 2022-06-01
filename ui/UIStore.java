@@ -8,10 +8,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.swing.*;
+import javax.swing.border.*;
 import javax.swing.event.MouseInputAdapter;
 
 import logic.Game;
 import logic.GameException;
+import logic.GameException.GameExceptionType;
 
 public class UIStore extends UIBase {
 
@@ -28,16 +30,21 @@ public class UIStore extends UIBase {
         super();
         
         upgrade = new JButton();
-        refresh = new JButton("Refresh($1)");
-        freeze = new JButton("Freeze($0)");
+        refresh = new JButton("刷新($1)");
+        freeze = new JButton("冻结($0)");
         level = new JLabel();
-        this.boxTop.add(upgrade);
-        this.boxTop.add(level);
-        this.boxTop.add(refresh);
-        this.boxTop.add(freeze);
+
+        this.boxTopLeft.add(upgrade);
+        this.boxTopMid.add(level);
+        this.boxTopRight.add(refresh);
+        this.boxTopRight.add(Box.createHorizontalStrut(4));
+        this.boxTopRight.add(freeze);
 
         coin = new JLabel();
-        this.boxBottom.add(coin);
+        
+        this.boxBottomMid.add(Box.createHorizontalStrut(4));
+        this.boxBottomMid.add(coin);
+        // this.boxBottom.add(Box.createGlue());
     }
 
     @Override
@@ -61,22 +68,24 @@ public class UIStore extends UIBase {
     }
 
     public void setLevel(Game game) {
-        level.setText(String.format("Store Level: %d", game.getLevel(game.SELF_PLAYER_ID)));
+        level.setText(String.format("商店等级: %d", game.getLevel(game.SELF_PLAYER_ID)));
     }
 
     public void setCoin(Game game) {
-        coin.setText(String.format("Coin: %d", game.getCoin(game.SELF_PLAYER_ID)));
+        coin.setText(String.format("铸币: %d", game.getCoin(game.SELF_PLAYER_ID)));
     }
 
     public void setUpgrade(Game game) {
-        upgrade.setText(String.format("Upgrade($%d)", game.getUpgradeFee(game.SELF_PLAYER_ID)));
+        upgrade.setText(String.format("升级($%d)", game.getUpgradeFee(game.SELF_PLAYER_ID)));
         System.out.println(game.getUpgradeFee(game.SELF_PLAYER_ID));
         funcUpgrade = (MouseEvent event) -> { 
             try {
                 game.upgrade(game.SELF_PLAYER_ID);
             } catch (GameException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                if (e.type == GameExceptionType.UPGRADE_NO_ENOUGH_COIN) {
+                    JOptionPane.showMessageDialog(null, e.getMessage());
+                }
+                else e.printStackTrace();
             }
         };
     }
