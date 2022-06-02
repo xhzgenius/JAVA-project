@@ -29,7 +29,12 @@ public class Fellow implements Cloneable{
         return new Fellow(Name, ID, Description, level, Type);
     }
 
-    public bool isDead()
+    public void attack(Fellow f)
+    {
+        
+    }
+
+    public boolean isDead()
     {
         return Health<=0;
     }
@@ -38,8 +43,8 @@ public class Fellow implements Cloneable{
         return Battleground;
     }
 
-    public ArrayList<Fellow> Deathrattle(ArrayList<Fellow> Battleground) {
-        return Battleground;
+    public ArrayList<Fellow> Deathrattle(ArrayList<Fellow> Battleground1, ArrayList<Fellow> Battleground2) {
+        return Battleground1;
     }
 
     public ArrayList<Fellow> WhileAttack(ArrayList<Fellow> Battleground) {

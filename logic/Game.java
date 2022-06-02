@@ -14,7 +14,7 @@ public class Game
     private ArrayList<ArrayList<Fellow>> inventoriesList; // 每名玩家的手牌
     private ArrayList<ArrayList<Fellow>> battlefieldsList; // 每名玩家战场上的生物
     private ArrayList<Integer> healthList; // 每名玩家的剩余生命值
-    private ArrayList<ArrayList<BattleHistory>> histories; // 每名玩家上一轮的对战记录
+    private ArrayList<BattleInfo> battleInfoList; // 每名玩家上一轮的对战记录
 
     /**  人类玩家的 ID */
     public int SELF_PLAYER_ID = 0; 
@@ -93,22 +93,31 @@ public class Game
      */
     public int getHealth(int playerID){return healthList.get(playerID);}
 
-    public ArrayList<BattleHistory> getBattleHistory(int playerID){return histories.get(playerID);}
     /**
-     * 给用户（UI和bot）的函数，用于购买随从，花费3铸币从商店购买以后置入自己的战场。
+     * 给UI的函数，用于获取某一名玩家的上一次对战的记录。
+     * @param playerID
+     * @return
+     */
+    public BattleInfo getBattleInfo(int playerID){return battleInfoList.get(playerID);}
+
+    /**
+     * 给用户（UI和bot）的函数，用于购买随从，花费3铸币从商店购买以后置入自己的手牌。
      * @param playerID 玩家ID（玩家在Game中的下标）
      * @param f 商店里的一个随从
      * @param position 购买以后，随从要放在哪一位置，从左往右数，右边的随从位置顺延
-     * @throws GameException 如果铸币不足3(ENROLL_NO_ENOUGH_COIN)，或者随从已满7个(ENROLL_TOO_MUCH_FELLOW)
+     * @throws GameException 
+     *      如果铸币不足3(ENROLL_NO_ENOUGH_COIN)，
+     *      或者随从已满7个(BATTLEFIELD_FULL)，
+     *      或者手牌满10张(INVENTORY_FULL)
      */
-    public void enroll(int playerID, Fellow f, int position) throws GameException
+    public void enroll(int playerID, Fellow f) throws GameException
     {
         Store store = storesList.get(playerID);
-        ArrayList<Fellow> battlefield = battlefieldsList.get(playerID);
+        ArrayList<Fellow> inventory = inventoriesList.get(playerID);
         if(store.getCoin()<3) throw new GameException(GameException.GameExceptionType.ENROLL_NO_ENOUGH_COIN);
-        if(battlefield.size()>=7) throw new GameException(GameException.GameExceptionType.ENROLL_TOO_MUCH_FELLOW);
+        if(inventory.size()>=10) throw new GameException(GameException.GameExceptionType.INVENTORY_FULL);
         store.enroll(f);
-        battlefield.add(position, f);
+        inventory.add(f);
     }
 
     /**
@@ -172,8 +181,10 @@ public class Game
         ArrayList<Fellow> inventory = inventoriesList.get(playerID);
         ArrayList<Fellow> battlefield = battlefieldsList.get(playerID);
         if(inventory.contains(f)==false) throw new GameException(GameException.GameExceptionType.CAST_FELLOW_NOT_FOUND);
+        if(battlefield.size()>=7) throw new GameException(GameException.GameExceptionType.BATTLEFIELD_FULL);
         inventory.remove(f);
         battlefield.add(position, f);
+        f.Battlecry(battlefield);
     }
 
     /**
@@ -199,4 +210,107 @@ public class Game
 
     // 以下是游戏内核函数
 
+    /**
+     * 游戏主体运行的函数，包含回合的循环和终局的检测。游戏开始后就会调用run()函数。
+     */
+    private void run()
+    {
+
+    }
+
+    /**
+     * 两个玩家的随从对战
+     */
+    private void battle(int player1, int player2)
+    {
+        ArrayList<Fellow> battlefield1 = new ArrayList<Fellow>(), 
+                          battlefield2 = new ArrayList<Fellow>();
+        Iterator<Fellow> it1 = battlefieldsList.get(player1).iterator(), 
+                         it2 = battlefieldsList.get(player2).iterator();
+        while(it1.hasNext())
+        {
+            battlefield1.add(it1.next().clone());
+        }
+        while(it2.hasNext())
+        {
+            battlefield1.add(it2.next().clone());
+        }
+        // 深拷贝双方玩家战场上的随从。Fellow实现了深拷贝clone()方法。
+
+        Random random = new Random(System.currentTimeMillis()); // 一次性随机生成器，用来随机选择攻击目标
+
+        BattleInfo battleInfo = new BattleInfo(); // 本场战斗的信息（用于提供给UI）
+
+        // 开始战斗
+        int index1 = 0, index2 = 0; // 虽然炉石里面真正的攻击顺序比这个复杂，但不管了，先按下标攻击
+        while(true)
+        {
+            battleInfo.addHistory(
+                new BattleInfo.BattleHistory(
+                    player1, player2, index1, index2, 
+                    battlefield1, battlefield2)
+                ); // 将攻击前双方的随从列表传给对战历史
+            if(battlefield1.isEmpty() || battlefield2.isEmpty()) break; // 有一方没有随从了
+            // 玩家1先攻击
+            if(index1>=battlefield1.size()) index1 = 0;
+            Fellow target = battlefield2.get(random.nextInt(battlefield2.size()));
+            battlefield1.get(index1).attack(target);
+            if(target.isDead())
+            {
+                target.Deathrattle(battlefield2, battlefield1); // 触发亡语
+                battlefield2.remove(target); // 移除
+            }
+
+            battleInfo.addHistory(
+                new BattleInfo.BattleHistory(
+                    player2, player1, index2, index1, 
+                    battlefield2, battlefield1)
+                ); // 将攻击前双方的随从列表传给对战历史
+            if(battlefield1.isEmpty() || battlefield2.isEmpty()) break; // 有一方没有随从了
+            // 玩家2攻击
+            if(index2>=battlefield2.size()) index2 = 0;
+            target = battlefield1.get(random.nextInt(battlefield1.size()));
+            battlefield2.get(index2).attack(target);
+            if(target.isDead())
+            {
+                target.Deathrattle(battlefield1, battlefield2); // 触发亡语
+                battlefield1.remove(target); // 移除
+            }
+        }
+        
+        // 战斗完毕
+        
+        if(battlefield1.isEmpty() && battlefield2.isEmpty())
+        {
+            // 不做任何事
+        }
+        else if(battlefield1.isEmpty()) // 玩家2赢了
+        {
+            int dmg = 0;
+            for(Fellow f: battlefield2) // 将玩家2场上剩余随从的星级加起来，作为对玩家1造成的伤害
+            {
+                dmg += f.level;
+            }
+            battleInfo.winner = player2;
+            battleInfo.damage = dmg;
+        }
+        else // 玩家1赢了
+        {
+            int dmg = 0;
+            for(Fellow f: battlefield1) // 将玩家2场上剩余随从的星级加起来，作为对玩家1造成的伤害
+            {
+                dmg += f.level;
+            }
+            battleInfo.winner = player1;
+            battleInfo.damage = dmg;
+        }
+
+        // 保存对战记录
+        battleInfoList.set(player1, battleInfo);
+        battleInfoList.set(player2, battleInfo);
+    }
+
+    
+        
 }
+
