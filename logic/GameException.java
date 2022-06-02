@@ -19,8 +19,8 @@ public class GameException extends Exception {
         ENROLL_NO_ENOUGH_COIN,
 
         /** 随从已满 */
-        @GameExceptionMessage("随从数量已满7个，无法购买。")
-        ENROLL_TOO_MUCH_FELLOW,
+        @GameExceptionMessage("随从数量已满7个，无法进场。")
+        BATTLEFIELD_FULL,
 
         /** 找不到随从 */
         @GameExceptionMessage("您在试图卖出一个自己没有的随从！")
@@ -37,6 +37,10 @@ public class GameException extends Exception {
         /** 找不到随从 */
         @GameExceptionMessage("您在试图施放一个自己没有的随从！")
         CAST_FELLOW_NOT_FOUND,
+
+        /** 手牌太多 */
+        @GameExceptionMessage("您的手牌已经满了！")
+        INVENTORY_FULL
     }
 
     public GameExceptionType type;
