@@ -29,6 +29,11 @@ public class Fellow implements Cloneable{
         return new Fellow(Name, ID, Description, level, Type);
     }
 
+    public bool isDead()
+    {
+        return Health<=0;
+    }
+
     public ArrayList<Fellow> Battlecry(ArrayList<Fellow> Battleground) {
         return Battleground;
     }
