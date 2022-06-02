@@ -1,17 +1,23 @@
 package ui;
 
 import java.awt.*;
+import java.awt.event.*;
+
 import javax.swing.*;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.EmptyBorder;
 
 import logic.*;
 
 public class UIBase extends JPanel {
+    JFrame frame;
+    JPanel canvas;
+
     Box boxTop;
     Box boxTopLeft;
     Box boxTopMid;
     Box boxTopRight;
+
+    Box boxCenter;
 
     Box boxBottom;
     Box boxBottomLeft;
@@ -20,10 +26,12 @@ public class UIBase extends JPanel {
 
     JLabel health;
 
-    UIBase() {
+    UIBase(JFrame frame) {
         super();
+        this.frame = frame;
+
         this.setLayout(new BorderLayout());
-        this.setPreferredSize(new Dimension(1024, 768));
+        this.setSize(new Dimension(1024, 768));
         this.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         boxTop = new Box(BoxLayout.X_AXIS);
@@ -58,6 +66,52 @@ public class UIBase extends JPanel {
 
         health = new JLabel();
         boxBottomMid.add(health);
+
+        Box containerVert = new Box(BoxLayout.Y_AXIS);
+        Box containerHoriz = new Box(BoxLayout.X_AXIS);
+        boxCenter = new Box(BoxLayout.Y_AXIS);
+
+        containerVert.add(Box.createGlue());
+        containerHoriz.add(Box.createGlue());
+        containerHoriz.add(boxCenter);
+        containerHoriz.add(Box.createGlue());
+        containerVert.add(containerHoriz);
+        containerVert.add(Box.createGlue());
+
+        this.add(containerVert, BorderLayout.CENTER);
+
+        JLayeredPane layeredPane = new JLayeredPane();
+
+        JPanel thisPanel = this;
+        canvas = new JPanel(null);
+        canvas.setOpaque(false);
+        layeredPane.add(thisPanel, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.add(canvas, JLayeredPane.DRAG_LAYER);
+        frame.add(layeredPane);
+        frame.setPreferredSize(new Dimension(1024, 768));
+        frame.addComponentListener(new ComponentListener() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    Dimension dim = frame.getRootPane().getSize();
+                    thisPanel.setSize(dim);
+                    thisPanel.revalidate();
+                    canvas.setSize(dim);
+                    frame.repaint();
+                });
+                
+            }
+
+            @Override
+            public void componentMoved(ComponentEvent e) {}
+
+            @Override
+            public void componentShown(ComponentEvent e) {}
+
+            @Override
+            public void componentHidden(ComponentEvent e) {}
+        });
+        
     }
 
     public void render(Game game) {
@@ -69,7 +123,7 @@ public class UIBase extends JPanel {
     }
 
     public void setHealth(Game game) {
-        this.health.setText(String.format("HP: %d", game.getHealth(game.SELF_PLAYER_ID)));
+        this.health.setText(String.format("血量: %d", game.getHealth(game.SELF_PLAYER_ID)));
     }
     
 }
