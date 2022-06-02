@@ -384,7 +384,7 @@ public class Store extends FellowPool
         int size =okList.size();
         int maxSize = this.maxFellowN - this.showFellow.size();
         // 可能重复的卡组
-        /* if(this.refreshMode==StoreRefreshMode.duplicate){
+        if(this.refreshMode==StoreRefreshMode.duplicate){
             for(int i=0;i<maxSize;++i){
             int idx = rdm.nextInt(size);
             this.showFellow.add(this.fellowList.get(okList.get(idx)));
@@ -398,7 +398,7 @@ public class Store extends FellowPool
                 }
                 this.showFellow.add(this.fellowList.get(okList.get(idx)));
             }
-        } */
+        }
         return this.showFellow;
     }
     /****** Share Mode ******/ 
