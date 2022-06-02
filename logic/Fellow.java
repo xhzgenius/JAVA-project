@@ -5,72 +5,57 @@ enum FellowType {
     General, Beast, Demon, Pirate, Dragon, Mech, Elemental, Murloc
 }
 
-public class Fellow {
-    final String name;
-    final String description;
-    int level;
-    final FellowType type;
-    int attack;
-    int health;
-
-    public String getName() {
-        return name;
-    }
-
-    public Integer getAttack() {
-        return attack;
-    }
-
-    public Integer getHealth() {
-        return health;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public FellowType getType() {
-        return type;
-    }
+public class Fellow implements Cloneable{
+    private int ID;
+    public final String Name;
+    public final String Description;
+    public int level;
+    public final FellowType Type;
+    public int Atk;
+    public int Health;
 
 
-    public Fellow(String name, String description, int tier, FellowType type) {
-        this.name = name;
-        this.description = description;
+    public Fellow(String name, int id, String description, int tier, FellowType type) {
+        this.Name = name;
+        this.ID = id;
+        this.Description = description;
         this.level = tier;
-        this.type = type;
+        this.Type = type;
     }
 
-    public ArrayList<Fellow> battleCry(ArrayList<Fellow> Battleground) {
+    @Override
+    public Fellow clone()
+    {
+        return new Fellow(Name, ID, Description, level, Type);
+    }
+
+    public ArrayList<Fellow> Battlecry(ArrayList<Fellow> Battleground) {
         return Battleground;
     }
 
-    public ArrayList<Fellow> deathRattle(ArrayList<Fellow> Battleground) {
+    public ArrayList<Fellow> Deathrattle(ArrayList<Fellow> Battleground) {
         return Battleground;
     }
 
-    public ArrayList<Fellow> whileAttack(ArrayList<Fellow> Battleground) {
+    public ArrayList<Fellow> WhileAttack(ArrayList<Fellow> Battleground) {
         return Battleground;
     }
 }
 
-/**
+/*
+    class Alleycat
     Attack: 1
     Health: 1
     Type: Beast
 */
 class Alleycat extends Fellow {
     public Alleycat() {
-        super("Alleycat", "Battle Cry: Summon a 1/1 Cat", 1, FellowType.Beast);
-        this.attack = 1;
-        this.health = 1;
+        super("Alleycat", 0, "Battlecry: Summon a 1/1 Cat", 1, FellowType.Beast);
+        this.Atk = 1;
+        this.Health = 1;
     }
 
-    public ArrayList<Fellow> battleCry(ArrayList<Fellow> Battleground) {
+    public ArrayList<Fellow> Battlecry(ArrayList<Fellow> Battleground) {
         Fellow m = new Cat();
         if (Battleground.size() < 7)
             Battleground.add(m);
@@ -78,32 +63,34 @@ class Alleycat extends Fellow {
     }
 }
 
-/**
+/*
+    class Cat
     Attack: 1
     Health: 1
     Type: Beast
 */
 class Cat extends Fellow {
     public Cat() {
-        super("Cat", "", 1, FellowType.Beast);
-        this.attack = 1;
-        this.health = 1;
+        super("Cat", 1, "", 1, FellowType.Beast);
+        this.Atk = 1;
+        this.Health = 1;
     }
 }
 
-/**
+/*
+    class Icky_Imp
     Attack: 1
     Health: 1
     Type: Demon
 */
-class IckyImp extends Fellow {
-    public IckyImp() {
-        super("IckyImp", "Death Rattle: Summon two 1/1 Imps", 1, FellowType.Demon);
-        this.attack = 1;
-        this.health = 1;
+class Icky_Imp extends Fellow {
+    public Icky_Imp() {
+        super("Icky_Imp", 2, "Deathrattle: Summon two 1/1 Imps", 1, FellowType.Demon);
+        this.Atk = 1;
+        this.Health = 1;
     }
 
-    public ArrayList<Fellow> deathRattle(ArrayList<Fellow> Battleground) {
+    public ArrayList<Fellow> Deathrattle(ArrayList<Fellow> Battleground) {
         Fellow m = new Imp();
         Fellow m2 = new Imp();
         if (Battleground.size() < 7)
@@ -114,36 +101,38 @@ class IckyImp extends Fellow {
     };
 }
 
-/**
+/*
+    class Imp
     Attack: 1
     Health: 1
     Type: Demon
 */
 class Imp extends Fellow {
     public Imp() {
-        super("Imp", "", 1, FellowType.Demon);
-        this.attack = 1;
-        this.health = 1;
+        super("Imp", 3, "", 1, FellowType.Demon);
+        this.Atk = 1;
+        this.Health = 1;
     }
 }
 
-/** 
+/*
+    class Rockpool_Hunter
     Attack: 2
     Health: 3
     Type: Murloc
 */
-class RockpoolHunter extends Fellow {
-    public RockpoolHunter() {
-        super("RockpoolHunter", "Battle Cry: Give a friendly Murloc +1/+1", 1, FellowType.Murloc);
-        this.attack = 2;
-        this.health = 3;
+class Rockpool_Hunter extends Fellow {
+    public Rockpool_Hunter() {
+        super("Rockpool_Hunter", 4, "Battlecry: Give a friendly murloc +1/+1", 1, FellowType.Murloc);
+        this.Atk = 2;
+        this.Health = 3;
     }
 
-    public ArrayList<Fellow> battleCry(ArrayList<Fellow> Battleground) {
+    public ArrayList<Fellow> Battlecry(ArrayList<Fellow> Battleground) {
         for (Fellow m: Battleground) {
-            if (m.type == FellowType.Murloc) {
-                m.attack += 1;
-                m.health += 1;
+            if (m.Type == FellowType.Murloc) {
+                m.Atk += 1;
+                m.Health += 1;
                 break;
             }
         }
@@ -151,112 +140,118 @@ class RockpoolHunter extends Fellow {
     }
 } 
 
-/**
+/*
+    class Implusive_Trickster
     Attack: 2
     Health: 2
     Type: Demon
 */
-class ImpulsiveTrickster extends Fellow {
-    public ImpulsiveTrickster() {
-        super("ImpulsiveTrickster", "Death Rattle: Give this minion's health to another friendly minion.", 1, FellowType.Demon);
-        this.attack = 2;
-        this.health = 2;
+class Implusive_Trickster extends Fellow {
+    public Implusive_Trickster() {
+        super("Implusive_Trickster", 5, "Deathrattle: Give this minion's health to another friendly minion.", 1, FellowType.Demon);
+        this.Atk = 2;
+        this.Health = 2;
     }
 
-    public ArrayList<Fellow> deathRattle(ArrayList<Fellow> Battleground) {
+    public ArrayList<Fellow> Deathrattle(ArrayList<Fellow> Battleground) {
         Random r = new Random();
         int i = r.nextInt(Battleground.size());
         Fellow m = Battleground.get(i);
-        if (m.type == FellowType.Demon) {
-            m.health += this.health;
+        if (m.Type == FellowType.Demon) {
+            m.Health += this.Health;
         }
         return Battleground;
     }
 }
 
-/**
+/*
+    class Scallywag
     Attack: 3
     Health: 1
     Type: Pirate
 */
 class Scallywag extends Fellow {
     public Scallywag() {
-        super("Scallywag", "Death Rattle: Summon a 1/1 Pirate. It attacks immediately.", 1, FellowType.Pirate);
-        this.attack = 3;
-        this.health = 1;
+        super("Scallywag", 6, "Deathrattle: Summon a 1/1 Pirate. It attacks immediately.", 1, FellowType.Pirate);
+        this.Atk = 3;
+        this.Health = 1;
     }
 
-    public ArrayList<Fellow> deathRattle(ArrayList<Fellow> Battleground) {
-        Fellow m = new SkyPirate();
+    public ArrayList<Fellow> Deathrattle(ArrayList<Fellow> Battleground) {
+        Fellow m = new Sky_Pirate();
         if (Battleground.size() < 7)
             Battleground.add(m);
         return Battleground;
     }
 }
 
-/**
+/*
+    class Sky_Pirate
     Attack: 1
     Health: 1
     Type: Pirate
 */
-class SkyPirate extends Fellow {
-    public SkyPirate() {
-        super("SkyPirate", "", 1, FellowType.Pirate);
-        this.attack = 1;
-        this.health = 1;
+class Sky_Pirate extends Fellow {
+    public Sky_Pirate() {
+        super("SkyPirate", 7, "", 1, FellowType.Pirate);
+        this.Atk = 1;
+        this.Health = 1;
     }
 }
 
-/**
+/*
+    class Harvest_Golem
     Attack: 2
     Health: 3
     Type: Mech
 */
-class HarvestGolem extends Fellow {
-    public HarvestGolem() {
-        super("HarvestGolem", "Death Rattle: Summon a 2/1 Damaged Golem", 2, FellowType.Mech);
-        this.attack = 2;
-        this.health = 3;
+class Harvest_Golem extends Fellow {
+    public Harvest_Golem() {
+        super("HarvestGolem", 8, "Deathrattle: Summon a 2/1 Damaged Golem", 2, FellowType.Mech);
+        this.Atk = 2;
+        this.Health = 3;
     }
 
-    public ArrayList<Fellow> deathRattle(ArrayList<Fellow> Battleground) {
-        Fellow m = new DamagedGolem();
+    public ArrayList<Fellow> Deathrattle(ArrayList<Fellow> Battleground) {
+        Fellow m = new Damaged_Golem();
         if (Battleground.size() < 7)
             Battleground.add(m);
         return Battleground;
     }
 }
 
-/**
+/*
+    class Damaged_Golem
     Attack: 2
     Health: 1
     Type: Mech
 */
-class DamagedGolem extends Fellow {
-    public DamagedGolem() {
-        super("DamagedGolem", "", 2, FellowType.Mech);
-        this.attack = 2;
-        this.health = 1;
+class Damaged_Golem extends Fellow {
+    public Damaged_Golem() {
+        super("DamagedGolem", 9, "", 2, FellowType.Mech);
+        this.Atk = 2;
+        this.Health = 1;
     }
 }
 
-/**
+/*
+    class Leapfrogger
     Attack: 3
     Health: 3
     Type: Beast
 */
 class Leapfrogger extends Fellow {
     public Leapfrogger() {
-        super("Leapfrogger", "Death Rattle: Give a friendly Beast +3/+3.", 2, FellowType.Beast);
-        this.attack = 3;
-        this.health = 3;
+        super("Leapfrogger", 10, "Deathrattle: Give a friendly Beast +3/+3.", 2, FellowType.Beast);
+        this.Atk = 3;
+        this.Health = 3;
     }
 
-    public ArrayList<Fellow> deathRattle(ArrayList<Fellow> Battleground) {
+    public ArrayList<Fellow> Deathrattle(ArrayList<Fellow> Battleground) {
         for (Fellow m: Battleground) {
-            if (m.type == FellowType.Beast) {
-                m.attack += 3;
-                m.health += 3;
+            if (m.Type == FellowType.Beast) {
+                m.Atk += 3;
+                m.Health += 3;
                 break;
             }
         }
@@ -264,50 +259,52 @@ class Leapfrogger extends Fellow {
     }
 }
 
-/**
+/*
+    class Metaltooth_Leaper
     Attack: 3
     Health: 3
     Type: Mech
-    battleCry: Give your other Mechs +2 Attack.
+    Battlecry: Give your other Mechs +2 Attack.
 */
-class MetaltoothLeaper extends Fellow {
-    public MetaltoothLeaper() {
-        super("MetaltoothLeaper", "Battle Cry: Give your other Mechs +2 Attack.", 2, FellowType.Mech);
-        this.attack = 3;
-        this.health = 3;
+class Metaltooth_Leaper extends Fellow {
+    public Metaltooth_Leaper() {
+        super("Metaltooth_Leaper", 11, "Battlecry: Give your other Mechs +2 Attack.", 2, FellowType.Mech);
+        this.Atk = 3;
+        this.Health = 3;
     }
 
     @Override
-    public ArrayList<Fellow> battleCry(ArrayList<Fellow> Battleground) {
+    public ArrayList<Fellow> Battlecry(ArrayList<Fellow> Battleground) {
         for (Fellow m: Battleground) {
-            if (m.type == FellowType.Mech) {
-                m.attack += 2;
+            if (m.Type == FellowType.Mech) {
+                m.Atk += 2;
             }
         }
         return Battleground;
     }
 }
 
-/**
+/*
+    class Menagerie_Mug
     Attack: 2
     Health: 2
     Type: General
-    deathRattle: Give 3 friendly minions +1/+1.
+    Deathrattle: Give 3 friendly minions +1/+1.
 */
-class MenagerieMug extends Fellow {
-    public MenagerieMug() {
-        super("MenagerieMug", "Death Rattle: Give 3 friendly minions +1/+1.", 2, FellowType.General);
-        this.attack = 2;
-        this.health = 2;
+class Menagerie_Mug extends Fellow {
+    public Menagerie_Mug() {
+        super("MenagerieMug", 12, "Deathrattle: Give 3 friendly minions +1/+1.", 2, FellowType.General);
+        this.Atk = 2;
+        this.Health = 2;
     }
 
-    public ArrayList<Fellow> deathRattle(ArrayList<Fellow> Battleground) {
+    public ArrayList<Fellow> Deathrattle(ArrayList<Fellow> Battleground) {
         Random r = new Random();
         for (int i = 0; i < 3; i++) {
             int j = r.nextInt(Battleground.size());
             Fellow m = Battleground.get(j);
-            m.attack += 1;
-            m.health += 1;
+            m.Atk += 1;
+            m.Health += 1;
         }
         return Battleground;
     }
