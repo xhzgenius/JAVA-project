@@ -23,6 +23,7 @@ public class UIStore extends UIBase {
     JButton upgrade;
     JButton refresh;
     JButton freeze;
+    JButton battle;
 
     JLabel level;
     JLabel coin;
@@ -30,6 +31,7 @@ public class UIStore extends UIBase {
     Consumer<AWTEvent> funcUpgrade;
     Consumer<AWTEvent> funcRefresh;
     Consumer<AWTEvent> funcFreeze;
+    Consumer<AWTEvent> funcBattle;
 
     ContainerDeck<ComponentCardFellow> showFellowDeck;
 
@@ -39,6 +41,7 @@ public class UIStore extends UIBase {
         upgrade = new JButton();
         refresh = new JButton("刷新($1)");
         freeze = new JButton("冻结($0)");
+        battle = new JButton("开始!");
         level = new JLabel();
 
         this.boxTopLeft.add(upgrade);
@@ -56,18 +59,25 @@ public class UIStore extends UIBase {
         // this.boxCenter.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         showFellowDeck = new ContainerDeck<>(canvas, frame);
+        this.boxCenter.add(Box.createVerticalGlue());
         this.boxCenter.add(showFellowDeck);
+        this.boxCenter.add(Box.createVerticalGlue());
+        this.boxCenter.add(battle);
+        this.boxCenter.add(Box.createVerticalGlue());
     }
 
     @Override
     public void render(Game game) {
         super.render(game);
-        setLevel(game);
-        setCoin(game);
-        setUpgrade(game);
-        setRefresh(game);
-        setFreeze(game);
-        renderShowFellows(game);
+        synchronized(game) {
+            setLevel(game);
+            setCoin(game);
+            setUpgrade(game);
+            setRefresh(game);
+            setFreeze(game);
+            setBattle(game);
+            renderShowFellows(game);
+        }
     }
 
     @Override
@@ -76,6 +86,7 @@ public class UIStore extends UIBase {
         upgrade.addActionListener(e -> funcUpgrade.accept(e));
         refresh.addActionListener(e -> funcRefresh.accept(e));
         freeze.addActionListener(e -> funcFreeze.accept(e));
+        battle.addActionListener(e -> funcBattle.accept(e));
     }
 
     public void setLevel(Game game) {
@@ -88,9 +99,11 @@ public class UIStore extends UIBase {
 
     public void setUpgrade(Game game) {
         upgrade.setText(String.format("升级($%d)", game.getUpgradeFee(game.SELF_PLAYER_ID)));
-        funcUpgrade = (AWTEvent event) -> { 
+        funcUpgrade = (AWTEvent event) -> {
             try {
-                game.upgrade(game.SELF_PLAYER_ID);
+                synchronized(game) {
+                    game.upgrade(game.SELF_PLAYER_ID);
+                }
             } catch (GameException e) {
                 if (e.type == GameExceptionType.UPGRADE_NO_ENOUGH_COIN) {
                     JOptionPane.showMessageDialog(null, e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
@@ -105,7 +118,9 @@ public class UIStore extends UIBase {
     public void setRefresh(Game game) {
         funcRefresh = (AWTEvent event) -> { 
             try {
-                game.refresh(game.SELF_PLAYER_ID);
+                synchronized(game) {
+                    game.refresh(game.SELF_PLAYER_ID);
+                }
             } catch (GameException e) {
                 if (e.type == GameExceptionType.REFRESH_NO_ENOUGH_COIN) {
                     JOptionPane.showMessageDialog(null, e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
@@ -119,8 +134,20 @@ public class UIStore extends UIBase {
 
     public void setFreeze(Game game) {
         funcFreeze = (AWTEvent event) -> {
-            game.freezeAll(game.SELF_PLAYER_ID);
+            synchronized(game) {
+                game.freezeAll(game.SELF_PLAYER_ID);
+            }
             render(game);
+        };
+    }
+
+    public void setBattle(Game game) {
+        funcBattle = (AWTEvent event) -> {
+            synchronized(game) {
+                System.out.println("[UI] Store done!");
+                game.gameHolder.release();
+            }
+            // render(game);
         };
     }
 
@@ -138,14 +165,31 @@ class Test {
         
         JFrame frame = new JFrame();
         UIStore uiStore = new UIStore(frame);
-        uiStore.render(game);
         uiStore.register();
-
-        ArrayList<Fellow> showFellows = game.getShowFellows(game.SELF_PLAYER_ID);
-        System.out.println(showFellows.toString());
+        uiStore.render(game);
 
         frame.pack();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setVisible(true);
+
+        
+        Thread gameLoop = new Thread(() -> {
+            game.run();
+        });
+        Thread uiLoop = new Thread(() -> {
+            game.uiHolder.hold();
+            System.out.println("[DEBUG] UI released.");
+            uiStore.render(game);
+        });
+
+        gameLoop.start();
+        uiLoop.start();
+
+        try {
+            gameLoop.join();
+            uiLoop.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,5 +1,9 @@
 package logic;
+import java.io.IOException;
+import java.nio.channels.Pipe;
 import java.util.*;
+
+import util.Holder;
 
 /**
  *
@@ -21,6 +25,12 @@ public class Game
 
     /**  人类玩家的 ID */
     public int SELF_PLAYER_ID = 0; 
+
+    /** UI 被 Game 阻塞，Game release，UI hold */
+    public Holder uiHolder;
+
+    /** Game 被 UI 阻塞，Game hold，UI release */
+    public Holder gameHolder;
 
     // ============================================================================================
     /**
@@ -53,7 +63,9 @@ public class Game
             remainPlayers.add(Integer.valueOf(i));
             bots.add(new Bot(this, i)); // 会有一个冗余的0号bot，但我们不会调用它。
         }
-        // storesList.get(0).start(0); // ! 开始回合放在这里是不是不太好？
+        
+        uiHolder = new Holder();
+        gameHolder = new Holder();
     }
 
     // ============================================================================================
@@ -212,58 +224,60 @@ public class Game
     // 以上是用户可调用函数
 
     // 以下是游戏内核函数
+
+    // ! 弃用
     /** UI和内核的消息传递对象。UI可以访问该对象，修改其信息，并且notify该对象。 */
-    public class UIOperation
-    {
-        public Game game;
-        public String operation;
-        public int playerID, arg1, arg2;
-        public Fellow argFellow1, argFellow2;
-        /** 如果读取到的操作不合法，则设置Exception对象，UI notify之后应当检查操作合法性。 */
-        public UIOperation(Game game){this.game = game;}
-        public GameException exception = null;
-        /**
-         * 读取该对象的成员变量，来对游戏进行操作。
-         * @return 0代表操作结束后不进入战斗阶段，1代表操作结束后进入战斗阶段。
-         */
-        public int operate()
-        {
-            try
-            {
-                switch(operation)
-                {
-                    case "enroll":
-                    game.enroll(playerID, argFellow1);
-                    break;
-                    case "sell":
-                    game.sell(playerID, argFellow1);
-                    break;
-                    case "freezeAll":
-                    game.freezeAll(playerID);
-                    break;
-                    case "refresh":
-                    game.refresh(playerID);
-                    break;
-                    case "upgrade":
-                    game.upgrade(playerID);
-                    break;
-                    case "cast":
-                    game.cast(playerID, argFellow1, arg1);
-                    break;
-                    case "changePosition":
-                    game.changePosition(playerID, arg1, arg2);
-                    break;
-                    case "endTurn":
-                    return 1; // 代表进入战斗阶段
-                }
-            } catch (GameException e)
-            {
-                this.exception = e;
-            }
-            return 0; // 代表不进入战斗阶段
-        }
-    }
-    public UIOperation operation = new UIOperation(this); // 此Game对象的唯一operation对象
+    // public class UIOperation
+    // {
+    //     public Game game;
+    //     public String operation;
+    //     public int playerID, arg1, arg2;
+    //     public Fellow argFellow1, argFellow2;
+    //     /** 如果读取到的操作不合法，则设置Exception对象，UI notify之后应当检查操作合法性。 */
+    //     public UIOperation(Game game){this.game = game;}
+    //     public GameException exception = null;
+    //     /**
+    //      * 读取该对象的成员变量，来对游戏进行操作。
+    //      * @return 0代表操作结束后不进入战斗阶段，1代表操作结束后进入战斗阶段。
+    //      */
+    //     public int operate()
+    //     {
+    //         try
+    //         {
+    //             switch(operation)
+    //             {
+    //                 case "enroll":
+    //                 game.enroll(playerID, argFellow1);
+    //                 break;
+    //                 case "sell":
+    //                 game.sell(playerID, argFellow1);
+    //                 break;
+    //                 case "freezeAll":
+    //                 game.freezeAll(playerID);
+    //                 break;
+    //                 case "refresh":
+    //                 game.refresh(playerID);
+    //                 break;
+    //                 case "upgrade":
+    //                 game.upgrade(playerID);
+    //                 break;
+    //                 case "cast":
+    //                 game.cast(playerID, argFellow1, arg1);
+    //                 break;
+    //                 case "changePosition":
+    //                 game.changePosition(playerID, arg1, arg2);
+    //                 break;
+    //                 case "endTurn":
+    //                 return 1; // 代表进入战斗阶段
+    //             }
+    //         } catch (GameException e)
+    //         {
+    //             this.exception = e;
+    //         }
+    //         return 0; // 代表不进入战斗阶段
+    //     }
+    // }
+    // public UIOperation operation = new UIOperation(this); // 此Game对象的唯一operation对象
 
     /**
      * 游戏主体运行的函数，包含回合的循环和终局的检测。游戏开始后就会调用run()函数。
@@ -271,6 +285,7 @@ public class Game
      */
     public int run()
     {
+        stepInStore();
         while(remainPlayers.size()>=2 && remainPlayers.contains(SELF_PLAYER_ID))
         {
             stepInStore();
@@ -392,7 +407,11 @@ public class Game
             bots.get(i).act();
         }
         // 玩家操作
-        while(true)
+        uiHolder.release(); // 解锁 UI，使其渲染
+        gameHolder.hold(); // 锁定 Game，等待玩家操作结束
+        System.out.println("[GAME] Store done. Start battle.");
+        // ! 弃用
+        /* while(true)
         {
             try
             {
@@ -405,7 +424,7 @@ public class Game
                 int result = this.operation.operate();
                 if(result==1) return;
             }
-        }
+        } */
     }
 
     private void stepInBattle()

@@ -114,10 +114,24 @@ public class UIBase extends JPanel {
         
     }
 
+    /**
+     * render 方法用于从当前的 Game 中获取当前的游戏状态，并将其显示在界面上
+     * 
+     * 这个方法可以多次调用
+     * 
+     * @param game Game 对象
+     */
     public void render(Game game) {
-        setHealth(game);
+        synchronized(game) {
+            setHealth(game);
+        }
     }
 
+    /**
+     * register 方法用于注册该对象的事件监听器
+     * 
+     * 这个方法仅可调用一次
+     */
     public void register() {
         
     }
