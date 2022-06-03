@@ -17,6 +17,7 @@ public class Game
     private ArrayList<BattleInfo> battleInfoList; // 每名玩家上一轮的对战记录
     private ArrayList<Integer> remainPlayers; // 剩余存活玩家的ID
     private ArrayList<Bot> bots; // Bots
+    int turn = 0; // 回合数
 
     /**  人类玩家的 ID */
     public int SELF_PLAYER_ID = 0; 
@@ -280,6 +281,7 @@ public class Game
                 if(healthList.get(id)>0) newRemainPlayers.add(id);
             }
             remainPlayers = newRemainPlayers;
+            turn += 1;
         }
         if(remainPlayers.contains(SELF_PLAYER_ID)) // 玩家赢了
         {
@@ -385,6 +387,7 @@ public class Game
         // bot操作
         for(int i = 0;i<maxPlayer;i++)
         {
+            storesList.get(i).start(turn);
             if(i==SELF_PLAYER_ID) continue;
             bots.get(i).act();
         }
