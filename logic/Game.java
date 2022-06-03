@@ -396,7 +396,10 @@ public class Game
         {
             try
             {
-                this.operation.wait(); // 等待UI的输入
+                synchronized(this.operation)
+                {
+                    this.operation.wait(); // 等待UI的输入
+                }
             } catch (InterruptedException e)
             {
                 int result = this.operation.operate();
