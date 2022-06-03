@@ -15,6 +15,8 @@ public class Game
     private ArrayList<ArrayList<Fellow>> battlefieldsList; // 每名玩家战场上的生物
     private ArrayList<Integer> healthList; // 每名玩家的剩余生命值
     private ArrayList<BattleInfo> battleInfoList; // 每名玩家上一轮的对战记录
+    private ArrayList<Integer> remainPlayers; // 剩余存活玩家的ID
+    private ArrayList<Bot> bots; // Bots
 
     /**  人类玩家的 ID */
     public int SELF_PLAYER_ID = 0; 
@@ -32,6 +34,8 @@ public class Game
         inventoriesList = new ArrayList<>();
         battlefieldsList = new ArrayList<>();
         healthList = new ArrayList<>();
+        remainPlayers = new ArrayList<>();
+        bots = new ArrayList<>();
         for(int i = 0;i<maxPlayer;i++)
         {
             storesList.add(
@@ -45,8 +49,10 @@ public class Game
             inventoriesList.add(new ArrayList<Fellow>());
             battlefieldsList.add(new ArrayList<Fellow>());
             healthList.add(Integer.valueOf(40));
+            remainPlayers.add(Integer.valueOf(i));
+            bots.add(new Bot(this, i)); // 会有一个冗余的0号bot，但我们不会调用它。
         }
-        storesList.get(0).start(0); // ! 开始回合放在这里是不是不太好？
+        // storesList.get(0).start(0); // ! 开始回合放在这里是不是不太好？
     }
 
     // ============================================================================================
@@ -200,22 +206,86 @@ public class Game
         battlefield.add(newPosition, f);
     }
 
-    public void endTurn(int playerID)
-    {
-        
-    }
 
     // ============================================================================================
     // 以上是用户可调用函数
 
     // 以下是游戏内核函数
+    /** UI和内核的消息传递对象。UI可以访问该对象，修改其信息，并且notify该对象。 */
+    public class UIOperation
+    {
+        public Game game;
+        public String operation;
+        public int playerID, arg1, arg2;
+        public Fellow argFellow1, argFellow2;
+        /** 如果读取到的操作不合法，则设置Exception对象，UI notify之后应当检查操作合法性。 */
+        public UIOperation(Game game){this.game = game;}
+        public GameException exception = null;
+        /**
+         * 读取该对象的成员变量，来对游戏进行操作。
+         * @return 0代表操作结束后不进入战斗阶段，1代表操作结束后进入战斗阶段。
+         */
+        public int operate()
+        {
+            try
+            {
+                switch(operation)
+                {
+                    case "enroll":
+                    game.enroll(playerID, argFellow1);
+                    break;
+                    case "sell":
+                    game.sell(playerID, argFellow1);
+                    break;
+                    case "freezeAll":
+                    game.freezeAll(playerID);
+                    break;
+                    case "refresh":
+                    game.refresh(playerID);
+                    break;
+                    case "upgrade":
+                    game.upgrade(playerID);
+                    break;
+                    case "cast":
+                    game.cast(playerID, argFellow1, arg1);
+                    break;
+                    case "changePosition":
+                    game.changePosition(playerID, arg1, arg2);
+                    break;
+                    case "endTurn":
+                    return 1; // 代表进入战斗阶段
+                }
+            } catch (GameException e)
+            {
+                this.exception = e;
+            }
+            return 0; // 代表不进入战斗阶段
+        }
+    }
+    public UIOperation operation = new UIOperation(this); // 此Game对象的唯一operation对象
 
     /**
      * 游戏主体运行的函数，包含回合的循环和终局的检测。游戏开始后就会调用run()函数。
+     * @return 对战结果（玩家是否胜利，1代表玩家胜利，0代表玩家输了）
      */
-    private void run()
+    public int run()
     {
-
+        while(remainPlayers.size()>=2 && remainPlayers.contains(SELF_PLAYER_ID))
+        {
+            stepInStore();
+            stepInBattle();
+            ArrayList<Integer> newRemainPlayers = new ArrayList<Integer>();
+            for(Integer id: remainPlayers)
+            {
+                if(healthList.get(id)>0) newRemainPlayers.add(id);
+            }
+            remainPlayers = newRemainPlayers;
+        }
+        if(remainPlayers.contains(SELF_PLAYER_ID)) // 玩家赢了
+        {
+            return 1;
+        }
+        else return 0; // 玩家输了
     }
 
     /**
@@ -310,7 +380,33 @@ public class Game
         battleInfoList.set(player2, battleInfo);
     }
 
-    
+    private void stepInStore()
+    {
+        // bot操作
+        for(int i = 0;i<maxPlayer;i++)
+        {
+            if(i==SELF_PLAYER_ID) continue;
+            bots.get(i).act();
+        }
+        // 玩家操作
+        while(true)
+        {
+            try
+            {
+                this.operation.wait(); // 等待UI的输入
+            } catch (InterruptedException e)
+            {
+                int result = this.operation.operate();
+                if(result==1) return;
+            }
+        }
+    }
+
+    private void stepInBattle()
+    {
+        // 将剩余玩家随机两两分组进行战斗。如果剩余玩家有奇数个，则将最后被淘汰的玩家加入其中
+
+    }
         
 }
 
