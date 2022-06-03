@@ -32,6 +32,8 @@ public class Holder {
         } /* else {
             System.out.println("[HOLD] Already released. No hold.");
         } */
+        waited.set(false);
+        notified.set(false);
     }
 
     /**
