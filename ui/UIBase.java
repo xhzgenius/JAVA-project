@@ -26,6 +26,8 @@ public class UIBase extends JPanel {
 
     JLabel health;
 
+    Runnable then = () -> {};
+
     UIBase(JFrame frame) {
         super();
         this.frame = frame;
@@ -126,9 +128,19 @@ public class UIBase extends JPanel {
         renderDynamic(game);
     }
 
+    /**
+     * renderStatic 方法用于从当前的 Game 中获取状态并更新带拖拽功能的组件
+     * 
+     * @param game
+     */
     public void renderDynamic(Game game) {
     }
 
+    /**
+     * renderStatic 方法用于从当前的 Game 中获取状态并更新普通的组件
+     * 
+     * @param game
+     */
     public void renderStatic(Game game) {
         synchronized(game) {
             setHealth(game);
@@ -146,6 +158,10 @@ public class UIBase extends JPanel {
 
     public void setHealth(Game game) {
         this.health.setText(String.format("血量: %d", game.getHealth(game.SELF_PLAYER_ID)));
+    }
+
+    public void then(Runnable then) {
+        this.then = then;
     }
     
 }

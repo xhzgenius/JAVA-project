@@ -4,7 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
 import javax.swing.*;
@@ -17,10 +17,21 @@ public class ContainerDeck<C extends Component> extends JPanel {
     private Box box;
     private JPanel canvas;
     private JFrame frame;
+
+    /** 该 Deck 中卡片可以拖拽并放置到的其他目标 */
     private ArrayList<DropTo<C>> dropToList;
-    private Function<C, Boolean> submit;
+
+    /** submit(card, index) -> bool 将 card 放置在该 Deck 中 index 位置，返回放置成功与否 */
+    private BiFunction<C, Integer, Boolean> submit;
+
+    /** 告知 submit 函数 index 位置不重要的常量 */
+    public static final Integer SUBMIT_DEFAULT_INDEX = -1;
+
+    /** 触发当前 UI 重渲染的钩子 */
     private Runnable propagateRerender;
-    // private Boolean ordered;
+
+    /** 该 Deck 中卡片的顺序是否有意义 */
+    public Boolean ordered = false;
 
     ContainerDeck(JPanel canvas, JFrame frame) {
         super();
@@ -32,7 +43,7 @@ public class ContainerDeck<C extends Component> extends JPanel {
         this.canvas = canvas;
         this.frame = frame;
         this.dropToList = new ArrayList<>();
-        this.submit = (_component) -> true;
+        this.submit = (_component, _index) -> true;
         this.propagateRerender = () -> {};
     }
 
@@ -40,7 +51,7 @@ public class ContainerDeck<C extends Component> extends JPanel {
         return dropToList;
     }
 
-    public void setSubmit(Function<C, Boolean> submit) {
+    public void setSubmit(BiFunction<C, Integer, Boolean> submit) {
         this.submit = submit;
     }
 
@@ -51,22 +62,32 @@ public class ContainerDeck<C extends Component> extends JPanel {
     /**
      * 在 Deck 中最后的位置插入一个元素，且不向 Game 提交修改
      * 
+     * 只用于渲染
+     * 
      * @param component
      */
-    public Boolean put(C component) {
-        return put(component, false, false);
+    public Boolean append(C component) {
+        put(component, false, false);
+        box.add(component);
+        return true;
     }
 
     /**
      * 在 Deck 中插入一个元素
      * 
      * @param component 要插入的元素
-     * @param positioned 根据当前位置决定插入的坐标
+     * @param positioned 需要根据当前在 UI 中的位置确定插入的坐标（说明不是在 render 中调用的，而是玩家操作引发的）
      * @param shouldSubmit 是否向 Game 提交修改
      */
     public Boolean put(C component, boolean positioned, boolean shouldSubmit) {
         if(shouldSubmit) {
-            boolean ok = submit.apply(component);
+            int destination;
+            if(positioned) {
+                destination = getInsertionIndex(component, box.getComponents(), 1, box.getComponentCount() - 1);
+            } else {
+                destination = SUBMIT_DEFAULT_INDEX;
+            }
+            boolean ok = submit.apply(component, destination);
             if(!ok) return false;
         }
         MouseMotionAdapter mouseMotionAdapter = new MouseMotionAdapter() {
@@ -110,9 +131,11 @@ public class ContainerDeck<C extends Component> extends JPanel {
                 component.removeMouseMotionListener(mouseMotionAdapter);
                 Rectangle itemHitbox = getAbsoluteBounds(component);
                 Runnable putBack = () -> {
-                    Component[] components = box.getComponents();
-                    int destination = getInsertionIndex(component, components, 1, components.length - 1);
-                    // box.add(component, destination);
+                    if(ordered) {
+                        Component[] components = box.getComponents();
+                        int destination = getInsertionIndex(component, components, 1, components.length - 1);
+                        submit.apply(component, destination);
+                    }
                     // box.revalidate();
                     // box.repaint();
                     canvas.remove(component);
@@ -143,16 +166,6 @@ public class ContainerDeck<C extends Component> extends JPanel {
             }
         };
         component.addMouseListener(mouseInputAdapter);
-        int destination;
-        if(positioned) {
-            destination = getInsertionIndex(component, box.getComponents(), 1, box.getComponentCount() - 1);
-        } else {
-            destination = box.getComponentCount() - 1;
-        }
-
-        box.add(component, destination);
-        box.revalidate();
-        box.repaint();
         return true;
     }
 
@@ -160,8 +173,6 @@ public class ContainerDeck<C extends Component> extends JPanel {
         box.removeAll();
         box.add(Box.createHorizontalGlue());
         box.add(Box.createHorizontalGlue());
-        box.revalidate();
-        box.repaint();
     }
 
     public Fellow[] getFellows() {

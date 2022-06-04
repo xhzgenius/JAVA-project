@@ -221,6 +221,23 @@ public class Game
         battlefield.add(newPosition, f);
     }
 
+    /**
+     * 给用户（UI和bot）的函数，用于将一个随从放到场上。它可能在手牌里或是已经在场上。
+     * @param playerID
+     * @param f 将要施放的随从
+     * @param position 放下去以后在场上的位置
+     * @throws GameException
+     */
+    public void changePositionOrCast(int playerID, Fellow f, int position) throws GameException {
+        ArrayList<Fellow> battlefield = battlefieldsList.get(playerID);
+        int positionOnBattlefield = battlefield.indexOf(f);
+        if(positionOnBattlefield == -1) {
+            cast(playerID, f, position);
+        } else {
+            changePosition(playerID, positionOnBattlefield, position);
+        }
+    }
+
 
     // ============================================================================================
     // 以上是用户可调用函数
