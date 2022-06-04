@@ -121,7 +121,15 @@ public class UIBase extends JPanel {
      * 
      * @param game Game 对象
      */
-    public void render(Game game) {
+    public final void render(Game game) {
+        renderStatic(game);
+        renderDynamic(game);
+    }
+
+    public void renderDynamic(Game game) {
+    }
+
+    public void renderStatic(Game game) {
         synchronized(game) {
             setHealth(game);
         }
@@ -132,7 +140,7 @@ public class UIBase extends JPanel {
      * 
      * 这个方法仅可调用一次
      */
-    public void register() {
+    public void register(Game game) {
         
     }
 

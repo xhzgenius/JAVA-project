@@ -2,7 +2,6 @@ package ui;
 
 import java.awt.*;
 import javax.swing.*;
-import javax.swing.border.*;
 
 import logic.Fellow;
 
@@ -26,5 +25,9 @@ public class ComponentCardFellow extends ComponentCard {
         this.attack.setText(fellow.Atk + "");
         this.health.setText(fellow.Health + "");
         this.setBorder(BorderFactory.createEtchedBorder(Color.BLUE, Color.BLACK));
+    }
+
+    public Fellow getFellow() {
+        return fellow;
     }
 }

@@ -34,6 +34,7 @@ public class UIStore extends UIBase {
     Consumer<AWTEvent> funcBattle;
 
     ContainerDeck<ComponentCardFellow> showFellowDeck;
+    ContainerDeck<ComponentCardFellow> inventoryDeck;
 
     UIStore(JFrame frame) {
         super(frame);
@@ -59,34 +60,59 @@ public class UIStore extends UIBase {
         // this.boxCenter.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         showFellowDeck = new ContainerDeck<>(canvas, frame);
+        Box showFellowBox = new Box(BoxLayout.Y_AXIS);
+        showFellowBox.setAlignmentY(Component.CENTER_ALIGNMENT);
+        showFellowBox.add(new JLabel("商店"));
+        showFellowBox.add(showFellowDeck);
+        showFellowBox.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+
+        inventoryDeck = new ContainerDeck<>(canvas, frame);
+        Box inventoryBox = new Box(BoxLayout.Y_AXIS);
+        inventoryBox.setAlignmentY(Component.CENTER_ALIGNMENT);
+        inventoryBox.add(new JLabel("手牌"));
+        inventoryBox.add(inventoryDeck);
+        inventoryBox.setBorder(BorderFactory.createLineBorder(Color.GREEN));
+
         this.boxCenter.add(Box.createVerticalGlue());
-        this.boxCenter.add(showFellowDeck);
-        this.boxCenter.add(Box.createVerticalGlue());
+        this.boxCenter.add(showFellowBox);
+        this.boxCenter.add(inventoryBox);
         this.boxCenter.add(battle);
         this.boxCenter.add(Box.createVerticalGlue());
     }
 
     @Override
-    public void render(Game game) {
-        super.render(game);
+    public void renderDynamic(Game game) {
+        super.renderDynamic(game);
         synchronized(game) {
-            setLevel(game);
-            setCoin(game);
-            setUpgrade(game);
-            setRefresh(game);
-            setFreeze(game);
-            setBattle(game);
             renderShowFellows(game);
+            renderInventory(game);
         }
     }
 
     @Override
-    public void register() {
-        super.register();
+    public void renderStatic(Game game) {
+        super.renderStatic(game);
+        synchronized(game) {
+            setLevel(game);
+            setCoin(game);
+            setUpgrade(game);
+        }
+    }
+
+    @Override
+    public void register(Game game) {
+        super.register(game);
+        registerUpgrade(game);
+        registerRefresh(game);
+        registerFreeze(game);
+        registerBattle(game);
         upgrade.addActionListener(e -> funcUpgrade.accept(e));
         refresh.addActionListener(e -> funcRefresh.accept(e));
         freeze.addActionListener(e -> funcFreeze.accept(e));
         battle.addActionListener(e -> funcBattle.accept(e));
+
+        registerShowFellows(game);
+        registerInventory(game);
     }
 
     public void setLevel(Game game) {
@@ -99,6 +125,9 @@ public class UIStore extends UIBase {
 
     public void setUpgrade(Game game) {
         upgrade.setText(String.format("升级($%d)", game.getUpgradeFee(game.SELF_PLAYER_ID)));
+    }
+
+    void registerUpgrade(Game game) {
         funcUpgrade = (AWTEvent event) -> {
             try {
                 synchronized(game) {
@@ -115,7 +144,7 @@ public class UIStore extends UIBase {
         };
     }
 
-    public void setRefresh(Game game) {
+    void registerRefresh(Game game) {
         funcRefresh = (AWTEvent event) -> { 
             try {
                 synchronized(game) {
@@ -132,7 +161,7 @@ public class UIStore extends UIBase {
         };
     }
 
-    public void setFreeze(Game game) {
+    void registerFreeze(Game game) {
         funcFreeze = (AWTEvent event) -> {
             synchronized(game) {
                 game.freezeAll(game.SELF_PLAYER_ID);
@@ -141,20 +170,56 @@ public class UIStore extends UIBase {
         };
     }
 
-    public void setBattle(Game game) {
+    void registerBattle(Game game) {
         funcBattle = (AWTEvent event) -> {
             synchronized(game) {
-                System.out.println("[UI] Store done!");
-                game.gameHolder.release();
+                // System.out.println("[UI] Store done!");
+                // game.gameHolder.release();
             }
             // render(game);
         };
     }
 
+    public void registerShowFellows(Game game) {
+        showFellowDeck.getDropToList().add(inventoryDeck.new DropToThis());
+        showFellowDeck.setPropagateRerender(() -> this.render(game));
+    }
+
+    public void registerInventory(Game game) {
+        inventoryDeck.setPropagateRerender(() -> this.render(game));
+        inventoryDeck.setSubmit((card) -> {
+            synchronized(game) {
+                try {
+                    game.enroll(game.SELF_PLAYER_ID, card.getFellow());
+                    return true;
+                } catch (GameException e) {
+                    if (e.type == GameExceptionType.ENROLL_NO_ENOUGH_COIN) {
+                        JOptionPane.showMessageDialog(null, e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                    }
+                    else e.printStackTrace();
+                    return false;
+                } finally {
+                    render(game);
+                }
+            }
+        });
+    }
+
     public void renderShowFellows(Game game) {
         showFellowDeck.clear();
-        ArrayList<Fellow> fellows = game.getShowFellows(game.SELF_PLAYER_ID);
-        fellows.stream().map(fellow -> new ComponentCardFellow(fellow)).collect(Collectors.toList()).forEach(showFellowDeck::put);
+        synchronized(game) {
+            ArrayList<Fellow> fellows = game.getShowFellows(game.SELF_PLAYER_ID);
+            fellows.stream().map(fellow -> new ComponentCardFellow(fellow)).collect(Collectors.toList()).forEach(showFellowDeck::put);
+        }
+        // showFellowDeck.
+    }
+
+    public void renderInventory(Game game) {
+        inventoryDeck.clear();
+        synchronized(game) {
+            ArrayList<Fellow> fellows = game.getInventory(game.SELF_PLAYER_ID);
+            fellows.stream().map(fellow -> new ComponentCardFellow(fellow)).collect(Collectors.toList()).forEach(inventoryDeck::put);
+        }
     }
 }
 
@@ -165,31 +230,11 @@ class Test {
         
         JFrame frame = new JFrame();
         UIStore uiStore = new UIStore(frame);
-        uiStore.register();
+        uiStore.register(game);
         uiStore.render(game);
 
         frame.pack();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setVisible(true);
-
-        
-        Thread gameLoop = new Thread(() -> {
-            game.run();
-        });
-        Thread uiLoop = new Thread(() -> {
-            game.uiHolder.hold();
-            System.out.println("[DEBUG] UI released.");
-            uiStore.render(game);
-        });
-
-        gameLoop.start();
-        uiLoop.start();
-
-        try {
-            gameLoop.join();
-            uiLoop.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }
