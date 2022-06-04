@@ -1,18 +1,20 @@
 package logic;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 enum FellowType {
     General, Beast, Demon, Pirate, Dragon, Mech, Elemental, Murloc
 }
 
-public class Fellow implements Cloneable{
-    private int ID;
+public abstract class Fellow implements Cloneable{
+    public final int ID;
     public final String Name;
     public final String Description;
     public int level;
     public final FellowType Type;
     public int Atk;
     public int Health;
+    public boolean isGolden = false; // 是否是金色（三合一得到的）随从
 
 
     public Fellow(String name, int id, String description, int tier, FellowType type) {
@@ -23,15 +25,45 @@ public class Fellow implements Cloneable{
         this.Type = type;
     }
 
+    public Fellow setStatus(int Atk, int Health, boolean isGolden)
+    {
+        this.Atk = Atk;
+        this.Health = Health;
+        this.isGolden = isGolden;
+        return this;
+    }
+
     @Override
     public Fellow clone()
     {
-        return new Fellow(Name, ID, Description, level, Type);
+        try {
+            return this.getClass()
+                .getDeclaredConstructor().newInstance()
+                .setStatus(Atk, Health, isGolden);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        // return new Fellow(Name, ID, Description, level, Type); // 这样构造的随从没有技能，不行
+    }
+
+    /** 创建一个新的金色随从，其属性值等于该随从+另一个同种随从。 */
+    public Fellow newGoldenInstance(Fellow f1, Fellow f2)
+    {
+        try {
+            return this.getClass()
+                .getDeclaredConstructor().newInstance()
+                .setStatus(f1.Atk+f2.Atk, f1.Health+f2.Health, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public void attack(Fellow f)
     {
-        
+        f.Health -= this.Atk;
+        this.Health -= f.Atk;
     }
 
     public boolean isDead()

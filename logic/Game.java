@@ -93,14 +93,14 @@ public class Game
     public int getUpgradeFee(int playerID){return storesList.get(playerID).getUpgradeFee();}
 
     /**
-     * 给用户（UI和bot）的函数，用于访问手牌（三合一获得的，且未放到战场上的随从）的信息。
+     * 给用户（UI和bot）的函数，用于访问手牌（购买的，以及三合一获得的，且未放到战场上的随从）的信息。
      * @param playerID 玩家ID（玩家在Game中的下标）
      * @return 玩家手牌中的随从列表
      */
     public ArrayList<Fellow> getInventory(int playerID){return inventoriesList.get(playerID);}
 
     /**
-     * 给用户（UI和bot）的函数，用于访问手牌（三合一获得的，且未放到战场上的随从）的信息。
+     * 给用户（UI和bot）的函数，用于访问战场上随从的信息。
      * @param playerID 玩家ID（玩家在Game中的下标）
      * @return 玩家当前战场上的随从列表
      */
@@ -137,7 +137,8 @@ public class Game
         if(store.getCoin()<3) throw new GameException(GameException.GameExceptionType.ENROLL_NO_ENOUGH_COIN);
         if(inventory.size()>=10) throw new GameException(GameException.GameExceptionType.INVENTORY_FULL);
         store.enroll(f);
-        inventory.add(f);
+        boolean result = mergeFellow(f, battlefieldsList.get(playerID), inventory); // 自动进行三合一(if able)
+        if(result==false) inventory.add(f); // 未三合一
     }
 
     /**
@@ -225,6 +226,43 @@ public class Game
     // 以上是用户可调用函数
 
     // 以下是游戏内核函数
+
+    /** 三合一（进入手牌之前检测。由游戏自动进行。）
+     * @return 当成功三合一，返回true，否则返回false
+     */
+    private boolean mergeFellow(Fellow newlyBoughtFellow, ArrayList<Fellow> battlefield, ArrayList<Fellow> inventory)
+    {
+        Fellow f1 = null, f2 = null;
+        for(Fellow f: battlefield)
+        {
+            if(f.ID==newlyBoughtFellow.ID && f.isGolden==false)
+            {
+                if(f1==null) f1 = f;
+                else if(f2==null) f2 = f;
+                else break;
+            }
+        }
+        for(Fellow f: inventory)
+        {
+            if(f.ID==newlyBoughtFellow.ID && f.isGolden==false)
+            {
+                if(f1==null) f1 = f;
+                else if(f2==null) f2 = f;
+                else break;
+            }
+        }
+        if(f1==null || f2==null) return false;
+        else
+        {
+            battlefield.remove(f1);
+            inventory.remove(f1);
+            battlefield.remove(f2);
+            inventory.remove(f2);
+            inventory.add(newlyBoughtFellow.newGoldenInstance(f1, f2));
+            return true;
+        }
+    }
+
 
     // ! 弃用
     /** UI和内核的消息传递对象。UI可以访问该对象，修改其信息，并且notify该对象。 */
