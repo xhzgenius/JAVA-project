@@ -7,7 +7,7 @@ public class Bot {
         this.game = game;
         this.playerID = playerID;
     }
-    void act()
+    void act() throws GameException
     {
         // 阿巴阿巴
     }

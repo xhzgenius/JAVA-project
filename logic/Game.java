@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.nio.channels.Pipe;
 import java.util.*;
 
+import logic.GameException.GameExceptionType;
 import util.Holder;
 
 /**
@@ -14,14 +15,16 @@ import util.Holder;
 public class Game
 {
     private final int maxPlayer; // 最大玩家数
-    private ArrayList<Store> storesList; // 每名玩家对应一个Store
-    private ArrayList<ArrayList<Fellow>> inventoriesList; // 每名玩家的手牌
-    private ArrayList<ArrayList<Fellow>> battlefieldsList; // 每名玩家战场上的生物
-    private ArrayList<Integer> healthList; // 每名玩家的剩余生命值
-    private ArrayList<BattleInfo> battleInfoList; // 每名玩家上一轮的对战记录
-    private ArrayList<Integer> remainPlayers; // 剩余存活玩家的ID
-    private ArrayList<Bot> bots; // Bots
+    private final ArrayList<String> namesList;
+    private ArrayList<Store> storesList = new ArrayList<>(); // 每名玩家对应一个Store
+    private ArrayList<ArrayList<Fellow>> inventoriesList = new ArrayList<>(); // 每名玩家的手牌
+    private ArrayList<ArrayList<Fellow>> battlefieldsList = new ArrayList<>(); // 每名玩家战场上的生物
+    private ArrayList<Integer> healthList = new ArrayList<>(); // 每名玩家的剩余生命值
+    private ArrayList<BattleInfo> battleInfoList = new ArrayList<>(); // 每名玩家上一轮的对战记录
+    private ArrayList<Integer> remainPlayers = new ArrayList<>(); // 剩余存活玩家的ID
+    private ArrayList<Bot> bots = new ArrayList<>(); // Bots
     int turn = 0; // 回合数
+    int lastEliminatedPlayerID = 0; // 上一个被淘汰的玩家ID，用于在当前人数为奇数时凑人数。
 
     /**  人类玩家的 ID */
     public int SELF_PLAYER_ID = 0; 
@@ -40,13 +43,9 @@ public class Game
      */
     public Game(ArrayList<String> namesList)
     {
-        maxPlayer = namesList.size();
-        storesList = new ArrayList<>();
-        inventoriesList = new ArrayList<>();
-        battlefieldsList = new ArrayList<>();
-        healthList = new ArrayList<>();
-        remainPlayers = new ArrayList<>();
-        bots = new ArrayList<>();
+        this.namesList = namesList;
+        maxPlayer = this.namesList.size();
+        if(maxPlayer%2!=0) System.out.println("[Game] 警告：玩家数为奇数，不合法。");
         for(int i = 0;i<maxPlayer;i++)
         {
             storesList.add(
@@ -60,12 +59,14 @@ public class Game
             inventoriesList.add(new ArrayList<Fellow>());
             battlefieldsList.add(new ArrayList<Fellow>());
             healthList.add(Integer.valueOf(40));
+            battleInfoList.add(new BattleInfo());
             remainPlayers.add(Integer.valueOf(i));
             bots.add(new Bot(this, i)); // 会有一个冗余的0号bot，但我们不会调用它。
         }
         
-        uiHolder = new Holder();
-        gameHolder = new Holder();
+        // uiHolder = new Holder();
+        // gameHolder = new Holder();
+        startStore();
     }
 
     // ============================================================================================
@@ -278,31 +279,21 @@ public class Game
     //     }
     // }
     // public UIOperation operation = new UIOperation(this); // 此Game对象的唯一operation对象
-
+    
+    static final int GAME_NOT_END = 0, GAME_END_WIN = 1, GAME_END_LOSE = -1;
     /**
-     * 游戏主体运行的函数，包含回合的循环和终局的检测。游戏开始后就会调用run()函数。
-     * @return 对战结果（玩家是否胜利，1代表玩家胜利，0代表玩家输了）
+     * 判断整盘游戏是否结束，若未结束返回0，结束且胜利返回1，结束且失败返回-1.
+     * @return 整盘游戏是否结束，若未结束返回0，结束且胜利返回1，结束且失败返回-1.
+     * Game的一些final int: GAME_NOT_END = 0, GAME_END_WIN = 1, GAME_END_LOSE = -1;
      */
-    public int run()
+    private int judgeGameEnd()
     {
-        stepInStore();
-        while(remainPlayers.size()>=2 && remainPlayers.contains(SELF_PLAYER_ID))
-        {
-            stepInStore();
-            stepInBattle();
-            ArrayList<Integer> newRemainPlayers = new ArrayList<Integer>();
-            for(Integer id: remainPlayers)
-            {
-                if(healthList.get(id)>0) newRemainPlayers.add(id);
-            }
-            remainPlayers = newRemainPlayers;
-            turn += 1;
-        }
+        if(remainPlayers.size()>=2) return GAME_NOT_END;
         if(remainPlayers.contains(SELF_PLAYER_ID)) // 玩家赢了
         {
-            return 1;
+            return GAME_END_WIN;
         }
-        else return 0; // 玩家输了
+        else return GAME_END_LOSE; // 玩家输了
     }
 
     /**
@@ -397,19 +388,26 @@ public class Game
         battleInfoList.set(player2, battleInfo);
     }
 
-    private void stepInStore()
+    private void startStore()
     {
         // bot操作
         for(int i = 0;i<maxPlayer;i++)
         {
             storesList.get(i).start(turn);
             if(i==SELF_PLAYER_ID) continue;
-            bots.get(i).act();
+            try
+            {
+                bots.get(i).act();
+            } catch(GameException e)
+            {
+                // 忽略Bot的错误操作
+            }
+            
         }
-        // 玩家操作
-        uiHolder.release(); // 解锁 UI，使其渲染
-        gameHolder.hold(); // 锁定 Game，等待玩家操作结束
-        System.out.println("[GAME] Store done. Start battle.");
+        // 玩家操作 （已弃用，交给UI来调用，无需在此处调用。
+        // uiHolder.release(); // 解锁 UI，使其渲染
+        // gameHolder.hold(); // 锁定 Game，等待玩家操作结束
+        // System.out.println("[GAME] Store done. Start battle.");
         // ! 弃用
         /* while(true)
         {
@@ -427,10 +425,41 @@ public class Game
         } */
     }
 
-    private void stepInBattle()
+    /** UI点击“结束回合”后，Game进行的操作。操作结束后，是玩家的商店阶段。
+     * @return 整盘游戏是否结束，若未结束返回0，结束且胜利返回1，结束且失败返回-1.
+     * Game的一些final int: GAME_NOT_END = 0, GAME_END_WIN = 1, GAME_END_LOSE = -1;
+     */
+    public int endTurn()
     {
         // 将剩余玩家随机两两分组进行战斗。如果剩余玩家有奇数个，则将最后被淘汰的玩家加入其中
+        ArrayList<Integer> battlePlayers = new ArrayList<Integer>(remainPlayers);
+        if(battlePlayers.size()%2==1) battlePlayers.add(lastEliminatedPlayerID);
+        Random random = new Random(System.currentTimeMillis());
+        while(battlePlayers.size()>=2)
+        {
+            Integer player1 = battlePlayers.get(random.nextInt(battlePlayers.size()));
+            battlePlayers.remove(player1);
+            Integer player2 = battlePlayers.get(random.nextInt(battlePlayers.size()));
+            battlePlayers.remove(player2);
+            battle(player1, player2);
+            System.out.printf("[Game] 对战双方: %s(id: %d) vs %s(id: %d)\n", 
+                              namesList.get(player1), player1, 
+                              namesList.get(player2), player2);
+        }
 
+        // 战斗结束，更新存活的玩家列表
+        ArrayList<Integer> newRemainPlayers = new ArrayList<Integer>();
+        for(Integer id: remainPlayers)
+        {
+            if(healthList.get(id)>0) newRemainPlayers.add(id); // 该玩家存活
+            else lastEliminatedPlayerID = id; // 该玩家被淘汰
+        }
+        remainPlayers = newRemainPlayers;
+        turn += 1;
+
+        int result = judgeGameEnd();
+        if(result==GAME_NOT_END) startStore();
+        return result;
     }
         
 }

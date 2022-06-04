@@ -127,7 +127,7 @@ public class Store extends FellowPool
                 this.upgraded=false;
             }
             else{
-                this.upgradeFee-=1;
+                this.upgradeFee = Math.max(this.upgradeFee-1, 0);
             } 
         }
 
@@ -305,7 +305,7 @@ public class Store extends FellowPool
             this.sUpgraded=false;
         }
         else{
-            this.sUpgradeFee-=1;
+            this.sUpgradeFee = Math.max(this.sUpgradeFee-1, 0);
         }
         this.refresh(false);
     }
@@ -341,7 +341,9 @@ public class Store extends FellowPool
     public void upgrade(){
         this.splayerCoin -= this.sUpgradeFee;
         this.sUpgraded=true;
-        this.splayerLevel++;
+        this.splayerLevel = Math.max(this.splayerLevel, 6);
+        this.maxFellowN=this.fellowGradeNum.get(this.splayerLevel - 1);
+        this.sUpgradeFee=this.upgradeCost.get(this.splayerLevel - 1);
     }
 
     /**
