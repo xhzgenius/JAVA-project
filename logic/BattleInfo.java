@@ -17,6 +17,21 @@ public class BattleInfo {
         damage = 0;
     }
 
+    @Override
+    public String toString()
+    {
+        StringBuffer result = new StringBuffer("BattleInfo: \n");
+        for(BattleHistory h: history)
+        {
+            result.append(h.toString());
+            result.append("\n");
+        }
+        result.append("Winner: "+winner+"\n");
+        result.append("Damage: "+damage+"\n");
+        return result.toString();
+
+    }
+
     /** BattleHistory会对战场进行深拷贝，请放心传入引用值。 */
     public void addHistory(BattleHistory h)
     {
