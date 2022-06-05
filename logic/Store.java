@@ -389,7 +389,7 @@ public class Store extends FellowPool
         if(this.refreshMode==StoreRefreshMode.duplicate){
             for(int i=0;i<maxSize;++i){
             int idx = rdm.nextInt(size);
-            this.showFellow.add(this.fellowList.get(okList.get(idx)));
+            this.showFellow.add(this.fellowList.get(okList.get(idx)).clone()); // ! Bug fixed by XHZ 商店展示的随从必须要是复制品！
             }
         }
         else{
