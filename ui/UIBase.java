@@ -134,7 +134,6 @@ public class UIBase extends JPanel {
 
     public void setHealth(Game game) {
         this.health.setText(String.format("血量: %d", game.getHealth(game.SELF_PLAYER_ID)));
-        System.out.println("[UI] Health: " + game.getHealth(game.SELF_PLAYER_ID));
     }
 
     public void then(Runnable then) {

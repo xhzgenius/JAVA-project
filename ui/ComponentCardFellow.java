@@ -24,7 +24,7 @@ public class ComponentCardFellow extends ComponentCard {
         this.boxSouthMid.add(level);
         this.boxSouthRight.add(health);
 
-        this.name.setText(fellow.Name);
+        this.name.setText(String.format("<html><body><span style=\"white-space: normal; text-align: center;\">%s<br><span style=\"font-size: 0.75em\">%s<br>%s</span></span></body></html>", fellow.Name, fellow.Type, fellow.Description));
         this.attack.setText(fellow.Atk + "A");
         this.health.setText(fellow.Health + "HP");
         this.level.setText(String.format("[%d]", fellow.level));

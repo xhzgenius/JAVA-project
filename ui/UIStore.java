@@ -219,7 +219,6 @@ public class UIStore extends UIBase {
 
     void registerBattle(Game game) {
         funcBattle = (AWTEvent event) -> {
-            System.out.println("[UI] Store done!");
             then.run();
         };
     }

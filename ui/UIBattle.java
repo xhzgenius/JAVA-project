@@ -92,7 +92,20 @@ public class UIBattle extends UIBase {
     }
 
     void setOpponentLabel(Game game) {
-        opponentLabel.setText(String.format("%s (%d 级) 血量: %d", game.getName(opponentId), game.getLevel(opponentId), game.getHealth(opponentId)));
+        int health = game.getHealth(opponentId);
+        if(battleInfo.winner == game.SELF_PLAYER_ID) {
+            health += battleInfo.damage;
+        }
+        opponentLabel.setText(String.format("%s (%d 级) 血量: %d", game.getName(opponentId), game.getLevel(opponentId), health));
+    }
+
+    @Override
+    public void setHealth(Game game) {
+        int health = game.getHealth(game.SELF_PLAYER_ID);
+        if(battleInfo.winner == opponentId) {
+            health += battleInfo.damage;
+        }
+        this.health.setText(String.format("血量: %d", health));
     }
 
     void renderTeam() {
