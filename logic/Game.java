@@ -187,6 +187,7 @@ public class Game
     {
         Store store = storesList.get(playerID);
         if(store.getCoin()<store.getUpgradeFee()) throw new GameException(GameException.GameExceptionType.UPGRADE_NO_ENOUGH_COIN);
+        if(store.getLevel()>=6) throw new GameException(GameException.GameExceptionType.MAX_LEVEL);
         store.upgrade();
     }
 

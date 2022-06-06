@@ -40,7 +40,11 @@ public class GameException extends Exception {
 
         /** 手牌太多 */
         @GameExceptionMessage("您的手牌已经满了！")
-        INVENTORY_FULL
+        INVENTORY_FULL, 
+
+        /** 酒馆满级，无法升级 */
+        @GameExceptionMessage("酒馆等级已达到最高！")
+        MAX_LEVEL
     }
 
     public GameExceptionType type;
