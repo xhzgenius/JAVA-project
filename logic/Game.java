@@ -419,11 +419,16 @@ public class Game
             if(attacker.isDead())
             {
                 attacker.Deathrattle(battlefield2, battlefield1);
-                battacfield2.remove(attacker);
+                battlefield2.remove(attacker);
             }
         }
         
         // 战斗完毕
+        battleInfo.addHistory(
+            new BattleInfo.BattleHistory(
+                -1, -1, -1, -1, 
+                battlefield1, battlefield2)
+            ); // 将战斗完毕时的战场传给对战历史
         
         if(battlefield1.isEmpty() && battlefield2.isEmpty())
         {
