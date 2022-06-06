@@ -9,6 +9,7 @@ public class ComponentCard extends JPanel {
     
     Box boxSouth;
     Box boxSouthLeft;
+    Box boxSouthMid;
     Box boxSouthRight;
 
     ComponentCard() {
@@ -20,14 +21,19 @@ public class ComponentCard extends JPanel {
 
         boxSouth = new Box(BoxLayout.X_AXIS);
         boxSouthLeft = new Box(BoxLayout.X_AXIS);
+        boxSouthMid = new Box(BoxLayout.X_AXIS);
         boxSouthRight = new Box(BoxLayout.X_AXIS);
         boxSouthLeft.setBorder(new EmptyBorder(4, 4, 4, 4));
+        boxSouthMid.setBorder(new EmptyBorder(4, 4, 4, 4));
         boxSouthRight.setBorder(new EmptyBorder(4, 4, 4, 4));
         boxSouth.setAlignmentX(Component.CENTER_ALIGNMENT);
         boxSouthLeft.setAlignmentX(Component.LEFT_ALIGNMENT);
+        boxSouthMid.setAlignmentX(Component.CENTER_ALIGNMENT);
         boxSouthRight.setAlignmentX(Component.RIGHT_ALIGNMENT);
         this.add(boxSouth, BorderLayout.SOUTH);
         boxSouth.add(boxSouthLeft);
+        boxSouth.add(Box.createGlue());
+        boxSouth.add(boxSouthMid);
         boxSouth.add(Box.createGlue());
         boxSouth.add(boxSouthRight);
 

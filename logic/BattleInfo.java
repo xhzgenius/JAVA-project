@@ -62,6 +62,9 @@ public class BattleInfo {
             this.defenderIndex = defenderIndex;
             this.attackingSideFellows = deepcopy(attackingSideFellows);
             this.defendingSideFellows = deepcopy(defendingSideFellows);
+            System.out.println("[Game] Create a history:");
+            System.out.println(this.attackingSideFellows.toString());
+            System.out.println(this.defendingSideFellows.toString());
         }
 
         static private ArrayList<Fellow> deepcopy(ArrayList<Fellow> battlefield) // 用于深拷贝一个战场（及上面的随从）

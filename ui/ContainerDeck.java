@@ -68,7 +68,7 @@ public class ContainerDeck<C extends Component> extends JPanel {
      */
     public Boolean append(C component) {
         put(component, false, false);
-        box.add(component);
+        box.add(component, box.getComponentCount() - 1);
         return true;
     }
 
@@ -93,43 +93,20 @@ public class ContainerDeck<C extends Component> extends JPanel {
         MouseMotionAdapter mouseMotionAdapter = new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                Point canvasPoint = frame.getContentPane().getLocationOnScreen();
-                Point point = e.getLocationOnScreen();
-                int width = component.getPreferredSize().width;
-                int height = component.getPreferredSize().height;
-                component.setBounds(
-                    point.x - canvasPoint.x - width / 2,
-                    point.y - canvasPoint.y - height / 2,
-                    width,
-                    height
-                );
-                canvas.repaint();
+                CanvasUtil.drag(canvas, frame, component, e);
             }
         };
         MouseInputAdapter mouseInputAdapter = new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                Container parent = component.getParent();
-                if(parent != canvas) {
-                    Point canvasPoint = frame.getContentPane().getLocationOnScreen();
-                    Point point = component.getLocationOnScreen();
-                    parent.remove(component);
-                    parent.revalidate();
-                    component.setBounds(
-                        point.x - canvasPoint.x,
-                        point.y - canvasPoint.y,
-                        component.getPreferredSize().width,
-                        component.getPreferredSize().height
-                    );
-                    canvas.add(component);
-                }
+                CanvasUtil.promote(canvas, frame, component);
                 component.addMouseMotionListener(mouseMotionAdapter);
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
                 component.removeMouseMotionListener(mouseMotionAdapter);
-                Rectangle itemHitbox = getAbsoluteBounds(component);
+                Rectangle itemHitbox = CanvasUtil.getAbsoluteBounds(component);
                 Runnable putBack = () -> {
                     if(ordered) {
                         Component[] components = box.getComponents();
@@ -144,7 +121,7 @@ public class ContainerDeck<C extends Component> extends JPanel {
                     .stream()
                     .filter(dropTo -> {
                         Component target = dropTo.getTarget();
-                        Rectangle targetHitbox = getAbsoluteBounds(target);
+                        Rectangle targetHitbox = CanvasUtil.getAbsoluteBounds(target);
                         return targetHitbox.intersects(itemHitbox);
                     })
                     .findFirst()
@@ -180,28 +157,10 @@ public class ContainerDeck<C extends Component> extends JPanel {
         return Arrays.stream(components).filter(component -> ComponentCardFellow.class.isInstance(component)).map(card -> ((ComponentCardFellow)card).getFellow()).toArray(Fellow[]::new);
     }
 
-    static Point getAbsoluteCenter(Component component) {
-        Point topLeftPoint = component.getLocationOnScreen();
-        return new Point(
-            topLeftPoint.x + component.getWidth() / 2,
-            topLeftPoint.y + component.getHeight() / 2
-        );
-    }
-
-    static Rectangle getAbsoluteBounds(Component component) {
-        Point topLeftPoint = component.getLocationOnScreen();
-        return new Rectangle(
-            topLeftPoint.x,
-            topLeftPoint.y,
-            component.getWidth(),
-            component.getHeight()
-        );
-    }
-
     static int getInsertionIndex(Component item, Component[] components, int startInclusive, int endExclusive) {
-        Point dropPoint = getAbsoluteCenter(item);
+        Point dropPoint = CanvasUtil.getAbsoluteCenter(item);
         int destination = IntStream.range(startInclusive, endExclusive).filter(i -> {
-            Point componentPoint = getAbsoluteCenter(components[i]);
+            Point componentPoint = CanvasUtil.getAbsoluteCenter(components[i]);
             return componentPoint.x >= dropPoint.x;
         }).findFirst().orElse(endExclusive);
         return destination;

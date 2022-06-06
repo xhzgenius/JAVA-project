@@ -28,9 +28,9 @@ public class UIBase extends JPanel {
 
     Runnable then = () -> {};
 
-    UIBase(JFrame frame) {
+    UIBase(UIFrame frame) {
         super();
-        this.frame = frame;
+        frame.register(this);
 
         this.setLayout(new BorderLayout());
         this.setSize(new Dimension(1024, 768));
@@ -80,40 +80,12 @@ public class UIBase extends JPanel {
         containerVert.add(containerHoriz);
         containerVert.add(Box.createGlue());
 
-        this.add(containerVert, BorderLayout.CENTER);
+        this.add(containerVert, BorderLayout.CENTER);    
+    }
 
-        JLayeredPane layeredPane = new JLayeredPane();
-
-        JPanel thisPanel = this;
-        canvas = new JPanel(null);
-        canvas.setOpaque(false);
-        layeredPane.add(thisPanel, JLayeredPane.DEFAULT_LAYER);
-        layeredPane.add(canvas, JLayeredPane.DRAG_LAYER);
-        frame.add(layeredPane);
-        frame.setPreferredSize(new Dimension(1024, 768));
-        frame.addComponentListener(new ComponentListener() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                SwingUtilities.invokeLater(() -> {
-                    Dimension dim = frame.getRootPane().getSize();
-                    thisPanel.setSize(dim);
-                    thisPanel.revalidate();
-                    canvas.setSize(dim);
-                    frame.repaint();
-                });
-                
-            }
-
-            @Override
-            public void componentMoved(ComponentEvent e) {}
-
-            @Override
-            public void componentShown(ComponentEvent e) {}
-
-            @Override
-            public void componentHidden(ComponentEvent e) {}
-        });
-        
+    public final void putInFrame(JFrame frame, JPanel canvas) {
+        this.frame = frame;
+        this.canvas = canvas;
     }
 
     /**
@@ -153,11 +125,11 @@ public class UIBase extends JPanel {
      * 这个方法仅可调用一次
      */
     public void register(Game game) {
-        
     }
 
     public void setHealth(Game game) {
         this.health.setText(String.format("血量: %d", game.getHealth(game.SELF_PLAYER_ID)));
+        System.out.println("[UI] Health: " + game.getHealth(game.SELF_PLAYER_ID));
     }
 
     public void then(Runnable then) {

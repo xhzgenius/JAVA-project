@@ -2,6 +2,7 @@ package ui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -43,7 +44,7 @@ public class UIStore extends UIBase {
 
     Boolean frozen = false;
 
-    UIStore(JFrame frame) {
+    UIStore(UIFrame frame) {
         super(frame);
         
         upgrade = new JButton();
@@ -298,14 +299,27 @@ public class UIStore extends UIBase {
 
 class Test {
     public static void main(String[] args) {
-        String[] a = {"Hi"};
+        String[] a = {"player", "bot"};
         Game game = new Game(new ArrayList<>(Arrays.asList(a)));
         
-        JFrame frame = new JFrame();
+        UIFrame frame = new UIFrame();
         UIStore uiStore = new UIStore(frame);
+        UIBattle uiBattle = new UIBattle(frame);
         uiStore.then(() -> {
-            uiStore.setVisible(false);
-            System.out.println("[UI] Store called then().");
+            int result = game.endTurn();
+            uiBattle.then(() -> {
+                if(result != 0) {
+                    frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+                    return;
+                }
+                frame.toggle(uiStore);
+                uiStore.render(game);
+            });
+            frame.toggle(uiBattle);
+            uiBattle.init(game);
+            uiBattle.register(game);
+            uiBattle.render(game);
+            uiBattle.playback(game, result);
         });
         uiStore.register(game);
         uiStore.render(game);
@@ -313,5 +327,6 @@ class Test {
         frame.pack();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setVisible(true);
+        frame.toggle(uiStore);
     }
 }
