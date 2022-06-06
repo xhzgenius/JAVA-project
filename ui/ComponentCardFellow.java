@@ -30,8 +30,9 @@ public class ComponentCardFellow extends ComponentCard {
         this.level.setText(String.format("[%d]", fellow.level));
         if(fellow.isGolden) {
             this.setBorder(BorderFactory.createLineBorder(new Color(246, 196, 48), 4));
+        } else {
+            this.setBorder(BorderFactory.createLineBorder(new Color(22, 119, 179), 4));
         }
-        this.setBorder(BorderFactory.createLineBorder(new Color(22, 119, 179), 4));
     }
 
     public Fellow getFellow() {

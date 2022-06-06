@@ -123,6 +123,8 @@ public class UIStore extends UIBase {
             setUpgrade(game);
             
             setFrozen(game);
+            
+            setHealthBar(game);
         }
     }
 
@@ -152,7 +154,13 @@ public class UIStore extends UIBase {
     }
 
     void setUpgrade(Game game) {
-        upgrade.setText(String.format("升级($%d)", game.getUpgradeFee(game.SELF_PLAYER_ID)));
+        if(game.getLevel(game.SELF_PLAYER_ID) == 6) {
+            upgrade.setEnabled(false);
+            upgrade.setText("满级");
+        } else {
+            upgrade.setEnabled(true);
+            upgrade.setText(String.format("升级($%d)", game.getUpgradeFee(game.SELF_PLAYER_ID)));
+        }
     }
 
     void setFrozen(Game game) {
@@ -163,6 +171,15 @@ public class UIStore extends UIBase {
         }
     }
 
+    public void setHealthBar(Game game) {
+        boxLeft.removeAll();
+        game.getRemainPlayers().stream().sorted((id1, id2) -> {
+            return game.getHealth(id2) - game.getHealth(id1);
+        }).forEach(id -> {
+           boxLeft.add(new JLabel(String.format("%s{%d}", game.getName(id), game.getHealth(id))));
+        });
+    }
+
     void registerUpgrade(Game game) {
         funcUpgrade = (AWTEvent event) -> {
             try {
@@ -170,10 +187,7 @@ public class UIStore extends UIBase {
                     game.upgrade(game.SELF_PLAYER_ID);
                 }
             } catch (GameException e) {
-                if (e.type == GameExceptionType.UPGRADE_NO_ENOUGH_COIN) {
-                    JOptionPane.showMessageDialog(null, e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
-                }
-                else e.printStackTrace();
+                JOptionPane.showMessageDialog(null, e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
             } finally {
                 render(game);
             }
@@ -187,10 +201,7 @@ public class UIStore extends UIBase {
                     game.refresh(game.SELF_PLAYER_ID);
                 }
             } catch (GameException e) {
-                if (e.type == GameExceptionType.REFRESH_NO_ENOUGH_COIN) {
-                    JOptionPane.showMessageDialog(null, e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
-                }
-                else e.printStackTrace();
+                JOptionPane.showMessageDialog(null, e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
             } finally {
                 render(game);
             }
@@ -299,7 +310,7 @@ public class UIStore extends UIBase {
 
 class Test {
     public static void main(String[] args) {
-        String[] a = {"player", "bot"};
+        String[] a = {"YOU", "Alice", "Bob", "Carol"};
         Game game = new Game(new ArrayList<>(Arrays.asList(a)));
         
         UIFrame frame = new UIFrame();

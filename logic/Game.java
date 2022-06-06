@@ -91,6 +91,9 @@ public class Game
     public ArrayList<Fellow> getShowFellows(int playerID){return storesList.get(playerID).getShowFellows();}
     public ArrayList<Fellow> getFrozenFellows(int playerID){return storesList.get(playerID).getFrozenFellows();}
     public int getUpgradeFee(int playerID){return storesList.get(playerID).getUpgradeFee();}
+    public ArrayList<Integer> getRemainPlayers() {
+        return remainPlayers;
+    }
 
     /**
      * 给用户（UI和bot）的函数，用于访问手牌（购买的，以及三合一获得的，且未放到战场上的随从）的信息。

@@ -24,6 +24,8 @@ public class UIBase extends JPanel {
     Box boxBottomMid;
     Box boxBottomRight;
 
+    Box boxLeft;
+
     JLabel health;
 
     Runnable then = () -> {};
@@ -68,6 +70,9 @@ public class UIBase extends JPanel {
 
         health = new JLabel();
         boxBottomMid.add(health);
+
+        boxLeft = new Box(BoxLayout.Y_AXIS);
+        this.add(boxLeft, BorderLayout.WEST);
 
         Box containerVert = new Box(BoxLayout.Y_AXIS);
         Box containerHoriz = new Box(BoxLayout.X_AXIS);

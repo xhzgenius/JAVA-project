@@ -67,6 +67,11 @@ public class ContainerTeam extends JPanel {
     }
 
     public void attack(int attackerIndex, int defenderIndex, Runnable then) {
+        if (attackerIndex < 0 || attackerIndex >= fellows.size() || defenderIndex >= opponent.fellows.size()) {
+            SwingUtilities.invokeLater(() -> propagateRerender.run());
+            SwingUtilities.invokeLater(() -> then.run());
+            return;
+        }
         Fellow attacker = fellows.get(attackerIndex);
         Fellow defender = opponent.fellows.get(defenderIndex);
         TeamMember attackerMember = mapMembers.get(attacker);
@@ -78,7 +83,7 @@ public class ContainerTeam extends JPanel {
         // attackerCard.setLocation(defenderLocation);
         Timeline.builder(attackerCard)
             .addPropertyToInterpolate("location", attackerCard.getLocation(), CanvasUtil.getRelativeTopLeft(defenderMember, canvas))
-            .setDuration(3000)
+            .setDuration(250)
             .setEase(new Spline(0.75f))
             .addCallback(new TimelineCallbackAdapter() {
                 @Override
