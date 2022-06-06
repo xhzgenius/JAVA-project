@@ -366,7 +366,7 @@ public class Game
         }
         while(it2.hasNext())
         {
-            battlefield1.add(it2.next().clone());
+            battlefield2.add(it2.next().clone());
         }
         // 深拷贝双方玩家战场上的随从。Fellow实现了深拷贝clone()方法。
 
