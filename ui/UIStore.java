@@ -307,37 +307,3 @@ public class UIStore extends UIBase {
         showFellowDeck.revalidate();
     }
 }
-
-class Test {
-    public static void main(String[] args) {
-        String[] a = {"YOU", "Alice", "Bob", "Carol"};
-        Game game = new Game(new ArrayList<>(Arrays.asList(a)));
-        
-        UIFrame frame = new UIFrame();
-        UIStore uiStore = new UIStore(frame);
-        UIBattle uiBattle = new UIBattle(frame);
-        uiStore.then(() -> {
-            int result = game.endTurn();
-            uiBattle.then(() -> {
-                if(result != 0) {
-                    frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
-                    return;
-                }
-                frame.toggle(uiStore);
-                uiStore.render(game);
-            });
-            frame.toggle(uiBattle);
-            uiBattle.init(game);
-            uiBattle.register(game);
-            uiBattle.render(game);
-            uiBattle.playback(game, result);
-        });
-        uiStore.register(game);
-        uiStore.render(game);
-
-        frame.pack();
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setVisible(true);
-        frame.toggle(uiStore);
-    }
-}
