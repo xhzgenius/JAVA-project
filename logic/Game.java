@@ -427,7 +427,7 @@ public class Game
         // 战斗完毕
         battleInfo.addHistory(
             new BattleInfo.BattleHistory(
-                -1, -1, -1, -1, 
+                player1, player2, -1, -1, 
                 battlefield1, battlefield2)
             ); // 将战斗完毕时的战场传给对战历史
         
