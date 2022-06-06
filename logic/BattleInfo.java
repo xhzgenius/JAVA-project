@@ -87,7 +87,7 @@ public class BattleInfo {
             {
                 result.append("defender: "+this.defenderID+"'s "+this.defendingSideFellows.get(this.defenderIndex).Name);
             }
-                result.append("\nattackingSideFellows: \n");
+            result.append("\nattackingSideFellows: \n");
             for(Fellow f: attackingSideFellows)
             {
                 result.append(f.Name+"("+f.Atk+"/"+f.Health+") ");
