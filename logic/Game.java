@@ -444,6 +444,7 @@ public class Game
             }
             battleInfo.winner = player2;
             battleInfo.damage = dmg;
+            healthList.set(player1, healthList.get(player1)-dmg);
         }
         else // 玩家1赢了
         {
@@ -454,6 +455,7 @@ public class Game
             }
             battleInfo.winner = player1;
             battleInfo.damage = dmg;
+            healthList.set(player2, healthList.get(player2)-dmg);
         }
 
         // 保存对战记录
