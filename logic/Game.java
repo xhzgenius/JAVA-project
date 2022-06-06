@@ -386,12 +386,18 @@ public class Game
             if(battlefield1.isEmpty() || battlefield2.isEmpty()) break; // 有一方没有随从了
             // 玩家1先攻击
             if(index1>=battlefield1.size()) index1 = 0;
-            Fellow target = battlefield2.get(random.nextInt(battlefield2.size()));
-            battlefield1.get(index1).attack(target);
+            Fellow target = battlefield2.get(random.nextInt(battlefield2.size())), 
+                   attacker = battlefield1.get(index1);
+            attacker.attack(target);
             if(target.isDead())
             {
                 target.Deathrattle(battlefield2, battlefield1); // 触发亡语
                 battlefield2.remove(target); // 移除
+            }
+            if(attacker.isDead())
+            {
+                attacker.Deathrattle(battlefield1, battlefield2);
+                battlefield1.remove(attacker);
             }
 
             battleInfo.addHistory(
@@ -403,11 +409,17 @@ public class Game
             // 玩家2攻击
             if(index2>=battlefield2.size()) index2 = 0;
             target = battlefield1.get(random.nextInt(battlefield1.size()));
-            battlefield2.get(index2).attack(target);
+            attacker = battlefield2.get(index2);
+            attacker.attack(target);
             if(target.isDead())
             {
                 target.Deathrattle(battlefield1, battlefield2); // 触发亡语
                 battlefield1.remove(target); // 移除
+            }
+            if(attacker.isDead())
+            {
+                attacker.Deathrattle(battlefield2, battlefield1);
+                battacfield2.remove(attacker);
             }
         }
         
