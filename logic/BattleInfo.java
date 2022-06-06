@@ -79,8 +79,14 @@ public class BattleInfo {
         public String toString()
         {
             StringBuffer result = new StringBuffer();
-            result.append("attacker: "+this.attackerID+"'s "+this.attackingSideFellows.get(this.attackerIndex).Name);
-            result.append("defender: "+this.defenderID+"'s "+this.defendingSideFellows.get(this.defenderIndex).Name);
+            if(this.attackerIndex>=0)
+            {
+                result.append("attacker: "+this.attackerID+"'s "+this.attackingSideFellows.get(this.attackerIndex).Name);
+            }
+            if(this.defenderIndex>=0)
+            {
+                result.append("defender: "+this.defenderID+"'s "+this.defendingSideFellows.get(this.defenderIndex).Name);
+            }
             result.append("\nattackingSideFellows: \n");
             for(Fellow f: attackingSideFellows)
             {
