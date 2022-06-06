@@ -341,7 +341,8 @@ public class Store extends FellowPool
     public void upgrade(){
         this.splayerCoin -= this.sUpgradeFee;
         this.sUpgraded=true;
-        this.splayerLevel = Math.max(this.splayerLevel, 6);
+        if(this.splayerLevel>=6) return;
+        this.splayerLevel = Math.min(this.splayerLevel+1, 6);
         this.maxFellowN=this.fellowGradeNum.get(this.splayerLevel - 1);
         this.sUpgradeFee=this.upgradeCost.get(this.splayerLevel - 1);
     }
