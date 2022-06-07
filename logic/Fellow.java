@@ -12,7 +12,7 @@ enum FellowType {
  * Health: int
  * Type: FellowType
  */
-abstract class Fellow implements Cloneable {
+public abstract class Fellow implements Cloneable {
     public final int ID;
     public final String Name;
     public final String Description;
