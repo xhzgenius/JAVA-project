@@ -9,6 +9,14 @@ import javax.swing.border.EmptyBorder;
 import logic.*;
 
 public class UIBase extends JPanel {
+    Color mycolorBrown = new Color(94, 38, 18);
+    Color mycolorBackground = new Color(210, 180, 140);
+    Color mycolorTextBrown = new Color(47, 19, 9);
+    Color mycolorTextLight = new Color(245, 222, 179);
+    Color mycolorButton = new Color(139, 69, 19);
+    Font myfontChinese = new Font("隶书", Font.BOLD, 18);
+    Font myfontEnglish = new Font("Ink free", Font.BOLD, 15);
+
     JFrame frame;
     JPanel canvas;
 
@@ -37,6 +45,7 @@ public class UIBase extends JPanel {
         this.setLayout(new BorderLayout());
         this.setSize(new Dimension(1024, 768));
         this.setBorder(new EmptyBorder(10, 10, 10, 10));
+        this.setBackground(mycolorBackground);
 
         boxTop = new Box(BoxLayout.X_AXIS);
         boxTopLeft = new Box(BoxLayout.X_AXIS);
@@ -69,6 +78,8 @@ public class UIBase extends JPanel {
         boxBottom.add(boxBottomRight);
 
         health = new JLabel();
+        health.setFont(myfontChinese);
+        health.setForeground(mycolorTextBrown);
         boxBottomMid.add(health);
 
         boxLeft = new Box(BoxLayout.Y_AXIS);

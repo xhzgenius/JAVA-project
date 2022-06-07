@@ -39,6 +39,8 @@ public class UIBattle extends UIBase {
         super(frame);
 
         opponentLabel = new JLabel();
+        opponentLabel.setFont(myfontChinese);
+        opponentLabel.setForeground(mycolorBrown);
         boxTopMid.add(opponentLabel);
 
         teamOpponent = new ContainerTeam(canvas, frame);
@@ -47,7 +49,9 @@ public class UIBattle extends UIBase {
         boxCenter.add(teamPlayer);
 
         tempLabel = new JLabel();
-        tempLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        // tempLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        tempLabel.setFont(myfontChinese);
+        tempLabel.setForeground(mycolorBrown);
         boxBottomRight.add(tempLabel);
     }
 

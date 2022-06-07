@@ -355,6 +355,41 @@ public class Game
         else return GAME_END_LOSE; // 玩家输了
     }
 
+    /** 对于某两个战场进行的死亡结算 */
+    private void deadCheck(ArrayList<Fellow> battlefield1, ArrayList<Fellow> battlefield2)
+    {
+        while(true)
+        {
+            boolean allAlive = true;
+            for(Fellow f: battlefield1)
+            {
+                if(f.isDead())
+                {
+                    f.Deathrattle(battlefield1, battlefield2);
+                    battlefield1.remove(f);
+                    allAlive = false;
+                    break;
+                }
+            }
+            if(allAlive) break;
+        }
+        while(true)
+        {
+            boolean allAlive = true;
+            for(Fellow f: battlefield2)
+            {
+                if(f.isDead())
+                {
+                    f.Deathrattle(battlefield2, battlefield1);
+                    battlefield2.remove(f);
+                    allAlive = false;
+                    break;
+                }
+            }
+            if(allAlive) break;
+        }
+    }
+
     /**
      * 两个玩家的随从对战
      */
@@ -394,16 +429,17 @@ public class Game
                    attacker = battlefield1.get(index1);
             attacker.WhileAttack(battlefield1, battlefield2);
             attacker.attack(target);
-            if(target.isDead())
-            {
-                target.Deathrattle(battlefield2, battlefield1); // 触发亡语
-                battlefield2.remove(target); // 移除
-            }
-            if(attacker.isDead())
-            {
-                attacker.Deathrattle(battlefield1, battlefield2);
-                battlefield1.remove(attacker);
-            }
+            this.deadCheck(battlefield1, battlefield2);
+            // if(target.isDead())
+            // {
+            //     target.Deathrattle(battlefield2, battlefield1); // 触发亡语
+            //     battlefield2.remove(target); // 移除
+            // }
+            // if(attacker.isDead())
+            // {
+            //     attacker.Deathrattle(battlefield1, battlefield2);
+            //     battlefield1.remove(attacker);
+            // }
 
             battleInfo.addHistory(
                 new BattleInfo.BattleHistory(
@@ -417,16 +453,17 @@ public class Game
             attacker = battlefield2.get(index2);
             attacker.WhileAttack(battlefield2, battlefield1);
             attacker.attack(target);
-            if(target.isDead())
-            {
-                target.Deathrattle(battlefield1, battlefield2); // 触发亡语
-                battlefield1.remove(target); // 移除
-            }
-            if(attacker.isDead())
-            {
-                attacker.Deathrattle(battlefield2, battlefield1);
-                battlefield2.remove(attacker);
-            }
+            this.deadCheck(battlefield2, battlefield1);
+            // if(target.isDead())
+            // {
+            //     target.Deathrattle(battlefield1, battlefield2); // 触发亡语
+            //     battlefield1.remove(target); // 移除
+            // }
+            // if(attacker.isDead())
+            // {
+            //     attacker.Deathrattle(battlefield2, battlefield1);
+            //     battlefield2.remove(attacker);
+            // }
         }
         
         // 战斗完毕

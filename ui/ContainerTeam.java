@@ -20,6 +20,11 @@ import animation.api.callback.TimelineCallbackAdapter;
 import animation.api.ease.*;
 
 public class ContainerTeam extends JPanel {
+    Color mycolorBrown = new Color(94, 38, 18);
+    Color mycolorBackground = new Color(210, 180, 140);
+    Font myfontChinese = new Font("隶书", Font.BOLD, 18);
+    Font myfontEnglish = new Font("Ink free", Font.BOLD, 15);
+
     private Box box;
     private JPanel canvas;
     private JFrame frame;
@@ -41,6 +46,7 @@ public class ContainerTeam extends JPanel {
         this.canvas = canvas;
         this.frame = frame;
         this.mapMembers = new HashMap<>();
+        this.setBackground(mycolorBackground);
     }
 
     public void setPropagateRerender(Runnable propagateRerender) {
@@ -108,6 +114,7 @@ public class ContainerTeam extends JPanel {
 }
 
 class TeamMember extends JPanel {
+    Color mycolorBackground = new Color(210, 180, 140);
     ComponentCardFellow card;
     Placeholder placeholder;
 
@@ -115,6 +122,7 @@ class TeamMember extends JPanel {
         super();
         this.card = card;
         add(card);
+        this.setBackground(mycolorBackground);
     }
 
     public ComponentCardFellow eject(JPanel canvas, JFrame frame) {
@@ -133,11 +141,13 @@ class TeamMember extends JPanel {
 }
 
 class Placeholder extends JPanel {
+    Color mycolorBackground = new Color(210, 180, 140);
     Placeholder(Rectangle rect) {
         super();
         Dimension dim = new Dimension(rect.width, rect.height);
         this.setPreferredSize(dim);
         this.setMaximumSize(dim);
         this.setMinimumSize(dim);
+        this.setBackground(mycolorBackground);
     }
 }

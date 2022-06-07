@@ -14,6 +14,11 @@ import javax.swing.event.*;
 import logic.Fellow;
 
 public class ContainerDeck<C extends Component> extends JPanel {
+    Color mycolorBrown = new Color(94, 38, 18);
+    Color mycolorBackground = new Color(210, 180, 140);
+    Font myfontChinese = new Font("隶书", Font.BOLD, 18);
+    Font myfontEnglish = new Font("Ink free", Font.BOLD, 15);
+
     private Box box;
     private JPanel canvas;
     private JFrame frame;
@@ -45,6 +50,7 @@ public class ContainerDeck<C extends Component> extends JPanel {
         this.dropToList = new ArrayList<>();
         this.submit = (_component, _index) -> true;
         this.propagateRerender = () -> {};
+        this.setBackground(mycolorBackground);
     }
 
     public ArrayList<DropTo<C>> getDropToList() {
