@@ -49,7 +49,7 @@ public class Game
         for(int i = 0;i<maxPlayer;i++)
         {
             storesList.add(
-                new Store(i, namesList.get(i), 1, 
+                new Store(i, namesList.get(i), (i==SELF_PLAYER_ID? 1: 2), 
                           // Cost to upgrade store
                           new ArrayList<Integer>(Arrays.asList(5, 6, 7, 8, 9, 10)), 
                           // Max numbers of Fellows
@@ -478,6 +478,7 @@ public class Game
                 bots.get(i).act();
             } catch(GameException e)
             {
+                System.out.println("[Bot] Wrong action: "+e.getMessage());
                 // 忽略Bot的错误操作
             }
             
