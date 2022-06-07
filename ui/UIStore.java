@@ -20,7 +20,6 @@ import logic.*;
 import logic.GameException.GameExceptionType;
 
 public class UIStore extends UIBase {
-
     JButton upgrade;
     JButton refresh;
     JButton freeze;
@@ -48,10 +47,24 @@ public class UIStore extends UIBase {
         super(frame);
         
         upgrade = new JButton();
+        upgrade.setFont(myfontChinese);
+        upgrade.setBackground(mycolorButton);
+        upgrade.setForeground(mycolorTextLight);
         refresh = new JButton("刷新($1)");
+        refresh.setFont(myfontChinese);
+        refresh.setBackground(mycolorButton);
+        refresh.setForeground(mycolorTextLight);
         freeze = new JButton("冻结($0)");
+        freeze.setFont(myfontChinese);
+        freeze.setBackground(mycolorButton);
+        freeze.setForeground(mycolorTextLight);
         battle = new JButton("开始!");
+        battle.setFont(myfontChinese);
+        battle.setBackground(mycolorButton);
+        battle.setForeground(mycolorTextLight);
         level = new JLabel();
+        level.setFont(myfontChinese);
+        level.setForeground(mycolorTextBrown);
 
         this.boxTopLeft.add(upgrade);
         this.boxTopMid.add(level);
@@ -60,41 +73,52 @@ public class UIStore extends UIBase {
         this.boxTopRight.add(freeze);
 
         coin = new JLabel();
+        coin.setFont(myfontChinese);
+        coin.setForeground(mycolorTextBrown);
         
         this.boxBottomMid.add(Box.createHorizontalStrut(4));
         this.boxBottomMid.add(coin);
 
         // this.boxCenter.add(new JLabel("测试"));
-        // this.boxCenter.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        // this.boxCenter.setBorder(BorderFactory.createLineBorder(mycolor));
 
+        JLabel storeLabel = new JLabel("商店");
+        storeLabel.setFont(myfontChinese);
+        storeLabel.setForeground(mycolorTextBrown);
         showFellowDeck = new ContainerDeck<>(canvas, frame);
         showFellowBox = new Box(BoxLayout.Y_AXIS);
         showFellowBox.setPreferredSize(new Dimension(1024, 160));
         showFellowBox.setMinimumSize(new Dimension(0, 160));
         showFellowBox.setAlignmentY(Component.CENTER_ALIGNMENT);
-        showFellowBox.add(new JLabel("商店"));
+        showFellowBox.add(storeLabel);
         showFellowBox.add(showFellowDeck);
-        showFellowBox.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+        showFellowBox.setBorder(BorderFactory.createMatteBorder(4, 4, 2, 4, mycolorBrown));
 
         battlefieldDeck = new ContainerDeck<>(canvas, frame);
         battlefieldDeck.ordered = true;
 
+        JLabel battlefieldLabel = new JLabel("战场");
+        battlefieldLabel.setFont(myfontChinese);
+        battlefieldLabel.setForeground(mycolorTextBrown);
         battlefieldBox = new Box(BoxLayout.Y_AXIS);
         battlefieldBox.setPreferredSize(new Dimension(1024, 160));
         battlefieldBox.setMinimumSize(new Dimension(0, 160));
         battlefieldBox.setAlignmentY(Component.CENTER_ALIGNMENT);
-        battlefieldBox.add(new JLabel("战场"));
+        battlefieldBox.add(battlefieldLabel);
         battlefieldBox.add(battlefieldDeck);
-        battlefieldBox.setBorder(BorderFactory.createLineBorder(Color.RED));
+        battlefieldBox.setBorder(BorderFactory.createMatteBorder(2, 4, 2, 4, mycolorBrown));
 
+        JLabel inventoryLabel = new JLabel("手牌");
+        inventoryLabel.setFont(myfontChinese);
+        inventoryLabel.setForeground(mycolorTextBrown);
         inventoryDeck = new ContainerDeck<>(canvas, frame);
         inventoryBox = new Box(BoxLayout.Y_AXIS);
         inventoryBox.setPreferredSize(new Dimension(1024, 160));
         inventoryBox.setMinimumSize(new Dimension(0, 160));
         inventoryBox.setAlignmentY(Component.CENTER_ALIGNMENT);
-        inventoryBox.add(new JLabel("手牌"));
+        inventoryBox.add(inventoryLabel);
         inventoryBox.add(inventoryDeck);
-        inventoryBox.setBorder(BorderFactory.createLineBorder(Color.GREEN));
+        inventoryBox.setBorder(BorderFactory.createMatteBorder(2, 4, 4, 4, mycolorBrown));
 
         this.boxCenter.add(Box.createVerticalGlue());
         this.boxCenter.add(showFellowBox);
@@ -165,9 +189,9 @@ public class UIStore extends UIBase {
 
     void setFrozen(Game game) {
         if (game.getFrozenFellows(game.SELF_PLAYER_ID).isEmpty()) {
-            showFellowBox.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+            showFellowBox.setBorder(BorderFactory.createLineBorder(mycolorBrown, 5));
         } else {
-            showFellowBox.setBorder(BorderFactory.createDashedBorder(new Color(176, 213, 223)));
+            showFellowBox.setBorder(BorderFactory.createLineBorder(new Color(176, 213, 223), 5));
         }
     }
 
@@ -176,7 +200,10 @@ public class UIStore extends UIBase {
         game.getRemainPlayers().stream().sorted((id1, id2) -> {
             return game.getHealth(id2) - game.getHealth(id1);
         }).forEach(id -> {
-           boxLeft.add(new JLabel(String.format("%s{%d}", game.getName(id), game.getHealth(id))));
+            JLabel tmpLabel = new JLabel(String.format("%s{%d}", game.getName(id), game.getHealth(id)));
+            tmpLabel.setFont(myfontEnglish);
+            tmpLabel.setForeground(mycolorTextBrown);
+            boxLeft.add(tmpLabel);
         });
     }
 
