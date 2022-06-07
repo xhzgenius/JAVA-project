@@ -392,6 +392,7 @@ public class Game
             if(index1>=battlefield1.size()) index1 = 0;
             Fellow target = battlefield2.get(random.nextInt(battlefield2.size())), 
                    attacker = battlefield1.get(index1);
+            attacker.WhileAttack(battlefield1, battlefield2);
             attacker.attack(target);
             if(target.isDead())
             {
@@ -414,6 +415,7 @@ public class Game
             if(index2>=battlefield2.size()) index2 = 0;
             target = battlefield1.get(random.nextInt(battlefield1.size()));
             attacker = battlefield2.get(index2);
+            attacker.WhileAttack(battlefield2, battlefield1);
             attacker.attack(target);
             if(target.isDead())
             {
